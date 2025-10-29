@@ -1,0 +1,13 @@
+server:
+  port: 9103
+  site: "site2"
+  interval: 30s
+  repo_owner: edge-orchestration-platform
+  repo_name: deployments
+  yaml_path: site-1/com-balaji-compose-a/desiredstate.yaml
+co:
+  url: "http://co:9000"
+  token: "secret-token"
+hosts:
+  - edge2
+

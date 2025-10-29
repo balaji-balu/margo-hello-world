@@ -1,0 +1,31 @@
+apiVersion: margo.org/v1alpha1
+kind: ApplicationDescription
+metadata:
+  id: multi-profile-app
+  name: Multi-Profile Application
+  version: 2.0.0
+deploymentProfiles:
+  - helm:
+      chart: multi-profile-chart
+      version: 2.0.0
+  - compose:
+      archive: multi-profile-compose.tar.gz
+parameters:
+  - name: cpuArchitecture
+    type: string
+    enum:
+      - x86_64
+      - arm
+    default: x86_64
+  - name: communicationInterface
+    type: string
+    enum:
+      - bluetooth
+      - usb
+    default: usb
+  - name: peripheralType
+    type: string
+    enum:
+      - microphone
+      - speaker
+    default: speaker

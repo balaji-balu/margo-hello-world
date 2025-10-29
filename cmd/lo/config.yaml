@@ -1,0 +1,11 @@
+trigger:
+  type: poll
+  interval: 30s
+  repo_owner: edge-orchestration-platform
+  repo_name: deployments
+  yaml_path: site-1/com-balaji-compose-a/desiredstate.yaml
+  token_env: GITHUB_TOKEN
+
+broker:
+  url: localhost:4222
+  topic: deployment-updates

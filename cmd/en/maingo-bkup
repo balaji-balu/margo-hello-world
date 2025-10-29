@@ -1,0 +1,166 @@
+// file: en/main.go
+package main
+
+// Edge Node (EN)
+// - Receives ApplyDeploy from LO
+// - Runs containers for each service (via docker exec)
+// - Reports status asynchronously to LO
+// - Uses persistent gRPC connection and context-based timeouts
+
+import (
+    "context"
+    "os"
+    "flag"
+    "fmt"
+    "log"
+    "net"
+    "os/exec"
+    "os/signal"
+    "sync"
+    "syscall"
+    "time"
+
+    "google.golang.org/grpc"
+    pb "github.com/balaji/hello/proto_generated"
+)
+
+// server implements EdgeNodeServer
+type server struct {
+    pb.UnimplementedEdgeNodeServer
+    nodeID   string
+    loAddr   string
+    loConn   *grpc.ClientConn
+    loClient pb.LocalOrchestratorClient
+    mu       sync.Mutex
+}
+
+func newServer(nodeID, loAddr string) *server {
+    log.Printf("EN %s: connecting to LO at %s", nodeID, loAddr)
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    conn, err := grpc.DialContext(ctx, loAddr, grpc.WithInsecure(), grpc.WithBlock())
+    if err != nil {
+        log.Fatalf("EN %s: failed to connect to LO: %v", nodeID, err)
+    }
+
+    return &server{
+        nodeID:   nodeID,
+        loAddr:   loAddr,
+        loConn:   conn,
+        loClient: pb.NewLocalOrchestratorClient(conn),
+    }
+}
+
+// ApplyDeploy handles deployment requests from LO
+func (s *server) ApplyDeploy(ctx context.Context, req *pb.DeployRequest) (*pb.DeployResponse, error) {
+    log.Printf("[EN:%s] ApplyDeploy: id=%s", s.nodeID, req.DeploymentId)
+
+    var statusesMu sync.Mutex
+    var statuses []*pb.ServiceStatus
+    var wg sync.WaitGroup
+    sem := make(chan struct{}, 4) // limit concurrency to 4 containers
+
+    for _, node := range req.Fleet.Nodes {
+        for _, svc := range node.Services {
+            wg.Add(1)
+            sem <- struct{}{} // acquire slot
+
+            go func(svc *pb.ServiceSpec) {
+                defer func() { <-sem; wg.Done() }()
+                st := s.runService(req.DeploymentId, svc)
+                statusesMu.Lock()
+                statuses = append(statuses, st)
+                statusesMu.Unlock()
+            }(svc)
+        }
+    }
+
+    wg.Wait()
+
+    // Send async report to LO
+    go s.reportStatus(req.DeploymentId, statuses)
+
+    return &pb.DeployResponse{
+        DeploymentId: req.DeploymentId,
+        Message:      "apply started",
+    }, nil
+}
+
+// runService runs a docker container and returns its status
+func (s *server) runService(deployID string, svc *pb.ServiceSpec) *pb.ServiceStatus {
+    name := fmt.Sprintf("%s-%s-%s", deployID, s.nodeID, svc.Name)
+    args := append([]string{"run", "--rm", "--name", name, svc.Container.Image}, svc.Container.Command...)
+    log.Printf("[EN:%s][DEPLOY:%s] running docker %v", s.nodeID, deployID, args)
+
+    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+    defer cancel()
+
+    cmd := exec.CommandContext(ctx, "docker", args...)
+    out, err := cmd.CombinedOutput()
+
+    msg := string(out)
+    if len(msg) > 200 {
+        msg = msg[:200] + "..." // truncate long output
+    }
+
+    switch {
+    case ctx.Err() == context.DeadlineExceeded:
+        log.Printf("[EN:%s][DEPLOY:%s][%s] timeout", s.nodeID, deployID, svc.Name)
+        return &pb.ServiceStatus{NodeId: s.nodeID, ServiceName: svc.Name, Status: pb.Status_FAILED, Message: "timeout"}
+    case err != nil:
+        log.Printf("[EN:%s][DEPLOY:%s][%s] failed: %v", s.nodeID, deployID, svc.Name, err)
+        return &pb.ServiceStatus{NodeId: s.nodeID, ServiceName: svc.Name, Status: pb.Status_FAILED, Message: msg}
+    default:
+        log.Printf("[EN:%s][DEPLOY:%s][%s] succeeded", s.nodeID, deployID, svc.Name)
+        return &pb.ServiceStatus{NodeId: s.nodeID, ServiceName: svc.Name, Status: pb.Status_SUCCEEDED, Message: "ran"}
+    }
+}
+
+// reportStatus sends the deployment results to the Local Orchestrator
+func (s *server) reportStatus(deployID string, statuses []*pb.ServiceStatus) {
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    rpt := &pb.StatusReport{DeploymentId: deployID, Statuses: statuses}
+    s.mu.Lock()
+    _, err := s.loClient.ReportFromEdge(ctx, rpt)
+    s.mu.Unlock()
+
+    if err != nil {
+        log.Printf("[EN:%s][DEPLOY:%s] failed to report to LO: %v", s.nodeID, deployID, err)
+    } else {
+        log.Printf("[EN:%s][DEPLOY:%s] report sent successfully", s.nodeID, deployID)
+    }
+}
+
+func main() {
+    port := flag.String("port", ":50054", "listen address")
+    nodeID := flag.String("id", "edge1", "node id")
+    loAddr := flag.String("lo", "localhost:50052", "local orchestrator address")
+    flag.Parse()
+
+    lis, err := net.Listen("tcp", *port)
+    if err != nil {
+        log.Fatalf("EN %s: failed to listen: %v", *nodeID, err)
+    }
+
+    srv := newServer(*nodeID, *loAddr)
+    grpcServer := grpc.NewServer()
+    pb.RegisterEdgeNodeServer(grpcServer, srv)
+
+    // Handle graceful shutdown
+    go func() {
+        sigCh := make(chan os.Signal, 1)
+        signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+        <-sigCh
+        log.Printf("EN %s: shutting down...", *nodeID)
+        grpcServer.GracefulStop()
+        srv.loConn.Close()
+        os.Exit(0)
+    }()
+
+    log.Printf("EN %s listening on %s", *nodeID, *port)
+    if err := grpcServer.Serve(lis); err != nil {
+        log.Fatalf("EN %s: serve failed: %v", *nodeID, err)
+    }
+}

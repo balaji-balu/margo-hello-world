@@ -1,0 +1,9 @@
+FROM docker.io/library/golang:1.25 AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o lo ./cmd/lo
+
+FROM debian:bookworm-slim
+WORKDIR /app
+COPY --from=builder /app/lo .
+ENTRYPOINT ["/app/lo"]

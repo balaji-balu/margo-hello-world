@@ -1,0 +1,226 @@
+v3
+Table application_desc {
+  app_id text [primary key]
+  name text
+  vendor text
+  version text
+  category text
+  description text
+  icon text
+  artifacturl text 
+  site text
+  tag_line text
+  tags JSONB
+  published text
+}
+
+Table deployment_profile {
+  id TEXT [pk]
+  type TEXT
+  description TEXT
+  cpu_cores FLOAT
+  memory TEXT
+  storage TEXT
+  cpu_architectures JSONB
+  peripherals JSONB
+  interfaces JSONB
+  app_id text [ref: > application_desc.app_id]
+}
+
+Table component {
+  id SERIAL [pk]
+  deployment_profile_id TEXT [ref: > deployment_profile.id]
+  name TEXT
+  properties JSONB
+}
+
+Table site {
+  id                uuid [pk, default: `gen_random_uuid()`]
+  site_id           varchar [unique, not null] // Logical Site identifier (e.g., "site1")
+  name              varchar
+  description       text
+  location          varchar                     // Optional - city or region
+  orchestrator_id   uuid    [ref: > orchestrator.id]                    // Link to the local orchestrator managing it
+  created_at        timestamptz [default: `now()`]
+  updated_at        timestamptz [default: `now()`]
+}
+
+Table host {
+  id                uuid [pk, default: `gen_random_uuid()`]
+  host_id           varchar [unique, not null]  // Unique Host identifier (UUID from agent)
+  site_id           uuid [not null, ref: > site.id] // FK to site
+  hostname          varchar
+  ip_address        text                        // Host IP
+  edge_url          varchar                     // URL or endpoint for orchestration
+  status            varchar                     // e.g., "Active", "Inactive", "Unreachable"
+  last_heartbeat    timestamptz                 // Last ping from edge agent
+  metadata          jsonb                       // Optional extra info (CPU, memory, etc.)
+  created_at        timestamptz [default: `now()`]
+  updated_at        timestamptz [default: `now()`]
+}
+
+Table orchestrator {
+  id                uuid [pk, default: `gen_random_uuid()`]
+  name              varchar
+  type              varchar                     // "central" or "local"
+  region            varchar                     // Optional region
+  api_endpoint      varchar                     // URL where orchestrator can be reached
+  created_at        timestamptz [default: `now()`]
+  updated_at        timestamptz [default: `now()`]
+}
+
+//Ref: site.orchestrator_id > orchestrator.id
+//Ref: host.site_id > site.id
+
+
+
+=======================================================
+
+v2 
+
+Table application_desc {
+  app_id text [primary key]
+  name text
+  vendor text
+  version text
+  category text
+  description text
+  icon text
+  artifacturl text 
+  site text
+  tag_line text
+  tags JSONB
+  published text
+}
+
+Table deployment_profile {
+  id TEXT [pk]
+  type TEXT
+  description TEXT
+  cpu_cores FLOAT
+  memory TEXT
+  storage TEXT
+  cpu_architectures JSONB
+  peripherals JSONB
+  interfaces JSONB
+}
+
+Table component {
+  id SERIAL [pk]
+  deployment_profile_id TEXT [ref: > deployment_profile.id]
+  name TEXT
+  properties JSONB
+}
+
+field.JSON("tags", []string{}).Optional(), 
+
+	field.JSON("cpu_architectures", []string{}).Optional(),
+	field.JSON("peripherals", []map[string]interface{}{}).Optional(),
+	field.JSON("interfaces", []map[string]interface{}{}).Optional(),
+
+dbdiagrams.io 
+==============
+v1 
+Table application_desc {
+  app_id text
+  name text
+  vendor text
+  version text
+  category text
+  description text
+  iconurl text
+  artifacturl text 
+  published text
+}
+
+Table deployment_profile {
+  id text
+  app_id text [ref: > application.app_id]
+  cpu text
+  memory text
+  storage text
+  network text
+  constraints varchar2
+}
+
+Table config_params {
+    id            int
+    name          text
+    type          text    // string, int, bool, enum
+    default_value  text
+    description   text
+    required      bool
+    app_id text [ref: > application.app_id]
+}
+
+Table configuration_layout {
+    id         int
+    section    text
+    ui_schema   varchar  // JSON Schema for form rendering
+    app_id text [ref: > application.app_id]                // FK -> AppCatalog.AppID
+}
+
+Table deployment_history {
+    deployment_id text
+    app_id text [ref: > application.app_id]  // FK -> AppCatalog.AppID// FK -> AppCatalog.AppID
+    profile_name  text  // FK -> DeploymentProfile.Name
+    status       text  // created, deploying, active, failed, etc.
+    createdAt    time.Time
+    updatedAt    time.Time
+}
+
+Table desired_state  {
+    id            int
+    deployment_id  text [ref: > deployment_history.deployment_id] // FK -> DeploymentHistory.DeploymentID
+    device_id      text [ref: > device.id] // FK -> Device.DeviceID
+    spec          varchar // container image, params, etc.
+}
+
+Table deployment_status  {
+    id             int
+    desired_state_id int [ref: > desired_state.id]
+    device_id       text [ref: > device.id]
+    state          text    // running, failed, stopped, etc.
+    message        text
+    timestamp      time.Time
+}
+
+Table device {
+    id    text
+    site_id      text
+    name        text
+    ip_address   text
+    online      bool
+    lastseenat  time.Time
+}
+
+Table DeviceCapability {
+    id        int
+    device_id  string  [ref: > device.id] // FK -> Device.DeviceID
+    cpu       string
+    memory    string
+    storage   string
+    network   string
+    tags      varchar
+    timestamp time.Time
+}
+
+Table AppCardView  {
+    id string
+    app_id      string [ref: > application.app_id]
+    name        string 
+    vendor      string 
+    version     string 
+    description string 
+    icon_url     string 
+    category    string 
+}
+
+Table DeviceStatusView {
+    device_id   string    
+    device_name string    
+    app_name    string    
+    state      string   
+    last_update time.Time 
+}
+Ref: "desired_state"."id" < "desired_state"."spec"

@@ -1,0 +1,121 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: docker.io/library/postgres:15.3
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orchestration
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # migrate:
+  #   image: docker.io/arigaio/atlas:latest
+  #   container_name: atlas-migrate
+  #   depends_on:
+  #     - postgres
+  #   volumes:
+  #     - ./migrations:/migrations
+  #     - migrate-ready:/ready
+  #   command: >
+  #     migrate apply
+  #     --url postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable
+  #     --dir file://migrations
+  #   restart: "no"
+
+  # central-orch:
+  #   build:
+  #     context: ./co
+  #     # dockerfile: ./co/Dockerfile
+  #     additional_contexts:
+  #       parent_ent: ./
+  #       parent_migrations: ./
+  #       parent_pkg: ./
+  #       parent_proto: ./
+  #       parent_test: ./
+  #   container_name: central-orch
+  #   image: orchestration:latest
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+  #     ROLE: central
+  #   command: ["/app/orchestrator"]
+  #   depends_on:
+  #     - postgres
+
+  # central-orch:
+  #   build:
+  #     context: ./central
+  #     dockerfile: Dockerfile
+  #   container_name: central-orch
+  #   depends_on:
+  #     - postgres
+  #     - migrate
+  #   volumes:
+  #     - migrate-ready:/ready
+  #   command: >
+  #     sh -c "until [ -f /ready/migrations_done ]; do
+  #              echo 'central-orch: waiting for migrations...';
+  #              sleep 3;
+  #            done;
+  #            echo 'Starting central orchestrator...';
+  #            /app/service"
+  #   environment:
+  #     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable"
+  #     ROLE: "central"
+  #   ports:
+  #     - "8080:8080"
+
+  # local-orch:
+  #   build:
+  #     context: ./local
+  #     dockerfile: Dockerfile
+  #   container_name: local-orch
+  #   depends_on:
+  #     - postgres
+  #     - migrate
+  #   volumes:
+  #     - migrate-ready:/ready
+  #   command: >
+  #     sh -c "until [ -f /ready/migrations_done ]; do
+  #              echo 'local-orch: waiting for migrations...';
+  #              sleep 3;
+  #            done;
+  #            echo 'Starting local orchestrator...';
+  #            /app/service"
+  #   environment:
+  #     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable"
+  #     ROLE: "local"
+  #   ports:
+  #     - "8081:8080"
+
+  # edge-agent:
+  #   build:
+  #     context: ./edge
+  #     dockerfile: Dockerfile
+  #   container_name: edge-agent
+  #   depends_on:
+  #     - postgres
+  #     - migrate
+  #   volumes:
+  #     - migrate-ready:/ready
+  #   command: >
+  #     sh -c "until [ -f /ready/migrations_done ]; do
+  #              echo 'edge-agent: waiting for migrations...';
+  #              sleep 3;
+  #            done;
+  #            echo 'Starting edge node...';
+  #            /app/service"
+  #   environment:
+  #     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable"
+  #     ROLE: "edge"
+  #   ports:
+  #     - "8082:8080"
+
+volumes:
+  pgdata:
+  migrate-ready:

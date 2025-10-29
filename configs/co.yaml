@@ -1,0 +1,9 @@
+server:
+  port: 9101
+  name: "central orchestrator"
+  interval: 30s
+  repo_owner: edge-orchestration-platform
+  repo_name: deployments
+  yaml_path: site-1/com-balaji-compose-a/desiredstate.yaml
+
+
