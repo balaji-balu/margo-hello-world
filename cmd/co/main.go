@@ -3,30 +3,21 @@ package main
 import (
     "context"
     "flag"
-    "fmt"
-    
+    "fmt"   
     "net"
-    
     "os"
-    
     "time"
     "log"
 
-    "github.com/balaji/hello/ent"
+    "github.com/balaji-balu/margo-hello-world/ent"
+    "github.com/balaji-balu/margo-hello-world/internal/api"
+    "github.com/balaji-balu/margo-hello-world/internal/config"
 
-    //"github.com/balaji/hello/pkg/deployment"
+
     "google.golang.org/grpc"
-    //"google.golang.org/grpc/credentials/insecure"
-    
-
-    //pb "github.com/balaji/hello/proto_generated"
-
     "entgo.io/ent/dialect"
     "entgo.io/ent/dialect/sql"
     _ "github.com/lib/pq"  // enables the 'postgres' driver
-
-    "github.com/balaji/hello/internal/api"
-
     "github.com/joho/godotenv"
 
 
@@ -36,7 +27,6 @@ import (
     "go.opentelemetry.io/otel/sdk/resource"
     "go.opentelemetry.io/otel/sdk/trace"
     "go.opentelemetry.io/otel/semconv/v1.12.0"
-    //"go.opentelemetry.io/otel/attribute"
 )
 
 
@@ -75,7 +65,7 @@ func main() {
     //config := flag.String("config", "", "config file")
     //node := flag.String("node", "", "node name")
 
-    configPath := flag.String("config", ""./configs/co.yaml"", "path to config file")
+    configPath := flag.String("config", "./configs/co.yaml", "path to config file")
 	flag.Parse()
 
 	cfg, err := config.LoadConfig(*configPath)

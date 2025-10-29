@@ -9,8 +9,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	//"github.com/balaji/hello/ent"
-    "github.com/balaji/hello/pkg/application"
+    "github.com/balaji-balu/margo-hello-world/pkg/application"
 	
 )
 

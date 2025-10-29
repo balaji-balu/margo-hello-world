@@ -5,8 +5,8 @@ import (
     "fmt"
     "log"
 
-	"github.com/balaji/hello/ent"
-    "github.com/balaji/hello/pkg/application"
+	"github.com/balaji-balu/margo-hello-world/ent"
+    "github.com/balaji-balu/margo-hello-world/pkg/application"
 )
 
 func Persist(ctx context.Context, client *ent.Client, ad *application.ApplicationDescription) error {

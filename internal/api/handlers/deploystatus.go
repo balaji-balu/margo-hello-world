@@ -2,7 +2,7 @@ package handlers
 
 import (
     "github.com/gin-gonic/gin"
-	"github.com/balaji/hello/pkg/deployment"
+	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	"log"
 	//"io"
 	//"net/http"

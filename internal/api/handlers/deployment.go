@@ -7,21 +7,21 @@ import (
 	"os"
 	"time"
 
-	"github.com/balaji/hello/pkg"
+	"github.com/balaji-balu/margo-hello-world/pkg"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
 
-	pb "github.com/balaji/hello/proto_generated"
+	pb "github.com/balaji-balu/margo-hello-world/proto_generated"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/gin-gonic/gin"
-    "github.com/balaji/hello/ent"
-    "github.com/balaji/hello/ent/deploymentprofile"
-    "github.com/balaji/hello/ent/component"
-    "github.com/balaji/hello/pkg/application"
-    "github.com/balaji/hello/pkg/deployment"
+    "github.com/balaji-balu/margo-hello-world/ent"
+    "github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
+    "github.com/balaji-balu/margo-hello-world/ent/component"
+    "github.com/balaji-balu/margo-hello-world/pkg/application"
+    "github.com/balaji-balu/margo-hello-world/pkg/deployment"
     
     "net/http"	
     "github.com/google/go-github/v55/github"

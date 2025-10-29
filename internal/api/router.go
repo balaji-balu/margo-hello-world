@@ -2,13 +2,9 @@ package api
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/balaji/hello/ent"
-
-    //"github.com/balaji/hello/internal/api"
-    //. "github.com/balaji/hello/internal/api/handlers"   
-
-    "github.com/balaji/hello/internal/api/handlers"
-    "github.com/balaji/hello/internal/api/middleware"
+    "github.com/balaji-balu/margo-hello-world/ent"
+    "github.com/balaji-balu/margo-hello-world/internal/api/handlers"
+    "github.com/balaji-balu/margo-hello-world/internal/api/middleware"
 
 )
 

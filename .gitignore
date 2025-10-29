@@ -3,3 +3,4 @@ proto_generated
 logs
 local-cache
 bin
+.env

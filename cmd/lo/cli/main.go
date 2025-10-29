@@ -4,7 +4,7 @@ package main
 import (
 	"log"
 
-	"github.com/balaji/hello/cmd/lo/cli/cmd"
+	"github.com/balaji-balu/margo-hello-world/cmd/lo/cli/cmd"
 )
 
 func main() {

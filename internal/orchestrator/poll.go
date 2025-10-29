@@ -13,7 +13,7 @@ import (
 	"encoding/json"
 	"bytes"
     
-	"github.com/balaji/hello/pkg/deployment"
+	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 
 )
 

@@ -1,8 +1,5 @@
 package deployment
 
-import (
-//"github.com/balaji/hello/pkg/application"
-)
 
 type DeploymentStatus string
 

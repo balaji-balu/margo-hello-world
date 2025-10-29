@@ -5,9 +5,9 @@ import (
     "net/http"
 
     "github.com/gin-gonic/gin"
-    "github.com/balaji/hello/ent"
+    "github.com/balaji-balu/margo-hello-world/ent"
 
-    "github.com/balaji/hello/pkg/application"
+    "github.com/balaji-balu/margo-hello-world/pkg/application"
 )
 
 func ListApps(c *gin.Context, client *ent.Client) {

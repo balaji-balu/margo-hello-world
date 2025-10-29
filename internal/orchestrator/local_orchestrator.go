@@ -4,8 +4,7 @@ import (
     //"log"
     "os"
     
-    //"github.com/balaji/hello/internal/api/handlers"
-    "github.com/balaji/hello/ent"
+    "github.com/balaji-balu/margo-hello-world/ent"
     // _ "github.com/lib/pq"  // enables the 'postgres' driver
     // "entgo.io/ent/dialect"
     // "entgo.io/ent/dialect/sql"

@@ -13,21 +13,21 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	pb "github.com/balaji/hello/proto_generated"
+	pb "github.com/balaji-balu/margo-hello-world/proto_generated"
 
-	"github.com/balaji/hello/pkg/deployment"
+	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	"fmt"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	_ "github.com/lib/pq"  // enables the 'postgres' driver
-	"github.com/balaji/hello/ent"
+	"github.com/balaji-balu/margo-hello-world/ent"
 	"github.com/joho/godotenv"
 	"net/http"
 	"bytes"
 	"encoding/json"
 
-	"github.com/balaji/hello/internal/orchestrator"
+	"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
 )
 
 type server struct {

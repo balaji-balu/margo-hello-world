@@ -11,7 +11,7 @@ import (
 	//"path/filepath"
 	//"time"
 
-	"github.com/balaji/hello/pkg/deployment"
+	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	//"github.com/google/go-containerregistry/pkg/authn"
 //"github.com/google/go-containerregistry/pkg/name"
 	//"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -23,7 +23,6 @@ import (
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
 	"oras.land/oras-go/v2/content/oci"
-	//"github.com/balaji/hello/pkg/deployment"
 
 	"os/exec"
 	"flag"

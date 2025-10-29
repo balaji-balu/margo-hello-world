@@ -4,7 +4,7 @@ import (
     //"gopkg.in/yaml.v3"
     "github.com/goccy/go-yaml"
     "os"
-    "github.com/balaji/hello/pkg/application"
+    "github.com/balaji-balu/margo-hello-world/pkg/application"
 )
 
 type ApplicationDeployment struct {
