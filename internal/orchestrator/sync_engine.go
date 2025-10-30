@@ -8,10 +8,29 @@ import (
     "net/http"
     "os"
     "time"
+    "go.uber.org/zap"
 )
 
 func (lo *LocalOrchestrator) Poll(ctx context.Context) {
-    log.Println("Poll:Polling for changes...", lo.Config.Owner, lo.Config.Repo, lo.Config.Token)
+
+    if err := lo.machine.Event(ctx, "receive_request"); err != nil {
+        fmt.Println("❌ Poll: Error:", err)
+        lo.logger.Error("Poll: Error:", zap.String("error", err.Error()))
+        return
+    }
+
+    if len(lo.Hosts) == 0 {
+        if err := lo.machine.Event(ctx, "no_edges"); err != nil {
+            fmt.Println("❌ Poll: Error")
+        }
+        return
+    }
+
+    lo.logger.Info("Poll:Polling for changes...", 
+        zap.String("owner", lo.Config.Owner), 
+        zap.String("repo",lo.Config.Repo), 
+        zap.String("token",lo.Config.Token))
+
     yamlData, err := fetchYAMLFromGitHub(ctx, 
             lo.Config.Token, lo.Config.Owner, lo.Config.Repo, lo.Config.Path)
     if err != nil {

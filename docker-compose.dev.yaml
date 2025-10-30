@@ -44,20 +44,20 @@ services:
   #   networks:
   #     - orchestrator-net
 
-  # edge1:
-  #   build:
-  #     context: .
-  #     dockerfile: ./dockerfile.edge
-  #   container_name: edge1
-  #   ports:
-  #     - "9201:9201"
-  #   volumes:
-  #     - ./configs/edge1.yaml:/app/config.yaml
-  #   depends_on:
-  #     - lo1
-  #   command: ["--config", "/app/config.yaml"]
-  #   networks:
-  #     - orchestrator-net
+  edge1:
+    build:
+      context: .
+      dockerfile: ./dockerfile.edge
+    container_name: edge1
+    ports:
+      - "9201:9201"
+    volumes:
+      - ./configs/edge1.yaml:/app/config.yaml
+    depends_on:
+      - lo1
+    command: ["--config", "/app/config.yaml"]
+    networks:
+      - orchestrator-net
 
   # edge2:
   #   build:

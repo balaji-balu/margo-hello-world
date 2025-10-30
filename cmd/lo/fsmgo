@@ -1,0 +1,89 @@
+package fsm
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/balaji-balu/margo-hello-world/internal/fsm"
+	"github.com/looplab/fsm"
+)
+
+type DeploymentRequest struct {
+	SiteID      string `json:"site_id"`
+	Deployment  string `json:"deployment"`
+	Version     string `json:"version"`
+	EdgeNodeURL string `json:"edge_node_url"`
+}
+
+func fsm() {
+	extra := map[string]fsm.Callback{
+		"enter_send_to_edge": sendToEdge,
+		"enter_completed":    reportCompletion,
+		"enter_failed":       handleFailure,
+	}
+
+	machine, err := fsm.LoadFSM("./configs/lo_fsm.yaml", "LO", extra)
+	if err != nil {
+		log.Fatalf("failed to load LO FSM: %v", err)
+	}
+
+	ctx := context.Background()
+	fmt.Println("LO started — current state:", machine.Current())
+
+	// Simulate deployment request from CO
+	_ = machine.Event(ctx, "receive_request")
+	_ = machine.Event(ctx, "verify_success")
+
+	// FSM will trigger "enter_send_to_edge" → which will dispatch to Edge
+	time.Sleep(2 * time.Second)
+	_ = machine.Event(ctx, "edge_accepted")
+
+	// Edge progress simulation
+	_ = machine.Event(ctx, "edge_progress")
+	_ = machine.Event(ctx, "edge_complete")
+
+	// FSM will trigger report back to CO
+	_ = machine.Event(ctx, "report_complete")
+
+	fmt.Println("Final state:", machine.Current())
+}
+
+// ---- FSM Callbacks ----
+
+func sendToEdge(ctx context.Context, e *fsm.Event) {
+	fmt.Println("[LO] Preparing deployment for Edge node...")
+
+	// Simulated deployment payload
+	req := DeploymentRequest{
+		SiteID:      "site1",
+		Deployment:  "edge-ai-model",
+		Version:     "v1.2.3",
+		EdgeNodeURL: "http://localhost:9102/deploy",
+	}
+
+	payload, _ := json.Marshal(req)
+	resp, err := http.Post(req.EdgeNodeURL, "application/json", 
+	                      bytes.NewReader(payload))
+	if err != nil {
+		fmt.Println("[LO] Failed to contact Edge node:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("[LO] Deployment sent to Edge node, awaiting acknowledgment...")
+}
+
+func reportCompletion(ctx context.Context, e *fsm.Event) {
+	fmt.Println("[LO] Deployment completed — reporting back to CO...")
+
+	// In a real setup, publish to Redpanda or Dapr output binding
+	fmt.Println("[LO] Report sent to CO (success).")
+}
+
+func handleFailure(ctx context.Context, e *fsm.Event) {
+	fmt.Println("[LO] Handling failure — rolling back or notifying CO...")
+}

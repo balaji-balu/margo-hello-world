@@ -1,6 +1,6 @@
 server:
   port: 9103
-  site: "site2"
+  site: 19dcb1c4-5959-46e2-90e6-b4b6a1e46b9b
   interval: 30s
   repo_owner: edge-orchestration-platform
   repo_name: deployments
@@ -9,5 +9,5 @@ co:
   url: "http://co:9000"
   token: "secret-token"
 hosts:
-  - edge2
+  - edce89ec08-93c2-4e07-84b2-e68ca97a1827ge2
 

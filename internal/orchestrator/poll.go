@@ -1,7 +1,7 @@
 package orchestrator
 
 import (
-    "os"
+    //"os"
     "context"
     "fmt"
     "log"
@@ -14,12 +14,17 @@ import (
 	"bytes"
     
 	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
-
+//"github.com/balaji-balu/margo-hello-world/ent"
+    //fsmloader "github.com/balaji-balu/margo-hello-world/internal/fsm"
 )
 
 func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byte) {
     //log.Println("✅ Updated desiredstate.yaml from CO registry")
 
+    fmt.Println("applyDeployment.Current State:", lo.machine.Current())
+
+    fmt.Println("New State:", lo.machine.Current())
+   
     var dply deployment.ApplicationDeployment
     if err := yaml.Unmarshal(yamlData, &dply); err != nil {
         log.Println("❌ Failed to parse desiredstate.yaml:", err)
@@ -55,38 +60,69 @@ func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byt
         log.Println("keyLocation:", c.Properties.KeyLocation)
 
         // TODO: Apply logic here — e.g., send to Edge Node(s)
-        PostDeployment(dply.Metadata.Name, lo.EOPort, c)
+        if err := lo.machine.Event(ctx, "verify_success"); err != nil {
+            fmt.Println("❌ Error:", err)
+            return
+        }
+        fmt.Println("→:", lo.machine.Current())
+
+        req := deployment.DeployRequest{
+	    	AppName: dply.Metadata.Name,
+            Image:   c.Properties.Repository,
+            Token:   lo.Config.Token,
+            Revision: c.Properties.Revision,
+        }
+        if err := PostDeployment(req, lo.Hosts, c); err != nil {
+            log.Println("1. PostDeployment Error:", err)
+            if err := lo.machine.Event(ctx, "edge_rejected"); err != nil {
+                fmt.Println("❌ Error:", err)
+                return
+            }
+            // fmt.Println("→:", lo.machine.Current())
+            return
+        }
+
+        if err := lo.machine.Event(ctx, "edge_accepted"); err != nil {
+            return
+        }
+
+        fmt.Println("→", lo.machine.Current())
     }
 }
 
-func PostDeployment(appName string, hostid string, c deployment.Component) {
+func PostDeployment(req deployment.DeployRequest, hostids []string, c deployment.Component) error{
 
-    req := deployment.DeployRequest{
-		AppName: appName,
-        Image:   c.Properties.Repository,
-        Token:   os.Getenv("GITHUB_TOKEN"),
-        Revision: c.Properties.Revision,
+    // req := deployment.DeployRequest{
+	// 	AppName: appName,
+    //     Image:   c.Properties.Repository,
+    //     Token:   os.Getenv("GITHUB_TOKEN"),
+    //     Revision: c.Properties.Revision,
 
-        //AppName: req.AppName,
-        //Image:   req.Image
-        //Token:   req.Token,
-	}
+    //     //AppName: req.AppName,
+    //     //Image:   req.Image
+    //     //Token:   req.Token,
+	// }
     body, _ := json.Marshal(req)
     
-    url:= fmt.Sprintf("http://localhost:%s/deploy", hostid)
-    log.Println("url:", url)
-    //.Println("req:", req)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
-    if err != nil {
-        log.Println("Error:", err)
-        return
-    }
-    defer resp.Body.Close()
+    for _, hostid := range hostids {
+        log.Println("hostid:", hostid)
 
-    if resp.StatusCode != http.StatusOK {
-        log.Println("Error:", resp.Status)
-        return  
+        url:= fmt.Sprintf("%s/deploy", hostid)
+        log.Println("url:", url)
+        //.Println("req:", req)
+        resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+        if err != nil {
+            log.Println("Error:", err)
+            return err
+        }
+        defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK {
+            log.Println("2.PostDeployment Error:", resp.Status)
+            return err 
+        }
     }
+    return nil
 }
 
 func fetchYAMLFromGitHub(ctx context.Context, token, owner, repo, path string) ([]byte, error) {

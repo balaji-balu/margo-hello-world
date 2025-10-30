@@ -1,4 +1,5 @@
 server:
+  domain: "localhost"
   port: 9106
   node: "edge2"
   interval: 30s
@@ -6,4 +7,6 @@ server:
   repo_name: deployments
   yaml_path: site-1/com-balaji-compose-a/desiredstate.yaml
 
+lo:
+  url: http://localhost:9102
 

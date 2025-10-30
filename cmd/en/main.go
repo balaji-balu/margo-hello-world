@@ -9,7 +9,7 @@ import (
 	"net/http"
 	//"os/exec"
 	//"path/filepath"
-	//"time"
+	"time"
 
 	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	//"github.com/google/go-containerregistry/pkg/authn"
@@ -28,6 +28,7 @@ import (
 	"flag"
 
 	//"oras.land/oras-go/v2/content/file"
+	cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
 
 )
 
@@ -37,10 +38,10 @@ import (
 // 	Token   string `json:"token"`
 // }
 
-var localOrchestratorURL = "http://localhost:8080/api/v1/status" // LO endpoint
+var localOrchestratorURL string //= "http://localhost:8080/api/v1/status" // LO endpoint
 
 func init() {
-    err := godotenv.Load("../../.env") // relative path to project root
+    err := godotenv.Load("./.env") // relative path to project root
     if err != nil {
         log.Println("No .env file found, reading from system environment")
     }
@@ -52,8 +53,40 @@ func reportStatus(app string, status deployment.DeploymentStatus, msg string) {
 		Message: msg,
 	}
 	body, _ := json.Marshal(report)
-	http.Post(localOrchestratorURL, "application/json", bytes.NewReader(body))
+	url := fmt.Sprintf("%s/deployment_status", localOrchestratorURL)
+	http.Post(url, "application/json", bytes.NewReader(body))
 }
+
+// register sends this edge node’s URL to the Local Orchestrator.
+func register(edgeURL string) error {
+	payload := map[string]string{
+		"edge_url": edgeURL,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+
+
+	url := fmt.Sprintf("%s/register", localOrchestratorURL)
+	resp, err := client.Post(url, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("⚠️ Failed to register edge (%s): status=%s", edgeURL, resp.Status)
+	} else {
+		log.Printf("✅ Successfully registered edge: %s", edgeURL)
+	}
+
+	return nil
+}
+
 
 func handleDeploy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -62,7 +95,6 @@ func handleDeploy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Received deploy request")
-
 
 	var req deployment.DeployRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -191,20 +223,26 @@ func handleDeploy(w http.ResponseWriter, r *http.Request) {
 
 
 func main() {
-	node := flag.String("node", "edge1", "node name")
-	port := flag.String("port", ":8081", "port")
-	cfg := flag.String("config", "./config.yaml", "config file")
+	//node := flag.String("node", "edge1", "node name")
+	//port := flag.String("port", ":8081", "port")
+	configPath := flag.String("config", "./config.yaml", "config file")
 	flag.Parse()
 
-	log.Println("port:", *port, *node, *cfg)
+	cfg, err := cfffg.LoadConfig(*configPath)
+	if err != nil {
+		log.Fatalf("error loading config: %v", err)
+	}
 
-	// cfg, err := config.LoadConfig(configPath)
-	// if err != nil {
-	// 	log.Fatal("failed to load config:", err)
-	// }
+	log.Printf("✅ Loaded config: domain=%s, port=%d, LO URL=%s",
+		cfg.Server.Domain, cfg.Server.Port, cfg.LO.URL)
+
+	localOrchestratorURL = cfg.LO.URL
+
+	register(fmt.Sprintf("http://%s:%d", cfg.Server.Domain, cfg.Server.Port))
+
 	http.HandleFunc("/deploy", handleDeploy)
-	fmt.Println("Server started on :" , *port)
-	err := http.ListenAndServe(*port, nil)
+	fmt.Println("Server started on :" ,cfg.Server.Port)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), nil)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 		return

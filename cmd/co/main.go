@@ -10,9 +10,9 @@ import (
     "log"
 
     "github.com/balaji-balu/margo-hello-world/ent"
-    //"github.com/balaji-balu/margo-hello-world/internal/api"
-    "github.com/balaji-balu/margo-hello-world/internal/cfffg"
-
+    "github.com/balaji-balu/margo-hello-world/internal/api"
+    cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
+    fsmloader "github.com/balaji-balu/margo-hello-world/internal/fsm"
 
     "google.golang.org/grpc"
     "entgo.io/ent/dialect"
@@ -28,7 +28,6 @@ import (
     "go.opentelemetry.io/otel/sdk/trace"
     "go.opentelemetry.io/otel/semconv/v1.12.0"
 )
-
 
 func InitTelemetry(ctx context.Context, serviceName string) func(context.Context) error {
     exporter, err := otlptracegrpc.New(ctx,
@@ -68,7 +67,7 @@ func main() {
     configPath := flag.String("config", "./configs/co.yaml", "path to config file")
 	flag.Parse()
 
-	cfg, err := config.LoadConfig(*configPath)
+	cfg, err := cfffg.LoadConfig(*configPath)
 	if err != nil {
 		log.Fatalf("error loading config: %v", err)
 	}
@@ -78,16 +77,27 @@ func main() {
 
     
     grpcPort := flag.String("grpc", ":50051", "CO gRPC listen address")
-    httpPort := flag.String("http", ":8080", "CO HTTP listen address")
+    //httpPort := flag.String("http", ":8080", "CO HTTP listen address")
     //loAddr := flag.String("lo", "localhost:50052", "Local Orchestrator address")
     flag.Parse()
 
-    log.Println("config:", *config, "node:", node)
+    //log.Println("config:", *config, "node:", node)
     
     dsn := os.Getenv("DATABASE_URL")
     // if dsn == "" {
     //     dsn = "postgres://postgres:postgres@localhost:5432/orchestration?sslmode=disable"
     // }
+
+
+	machine, err := fsmloader.LoadFSM("./configs/fsm.yaml", "CO")
+	if err != nil {
+		log.Fatalf("failed to load FSM: %v", err)
+	}
+
+	fmt.Println("CO initial:", machine.Current())
+	_ = machine.Event(ctx, "send_request", )
+	_ = machine.Event(ctx, "complete")
+	_ = machine.Event(ctx, "reset")
 
     fmt.Println("[CO] connecting to postgres at ", dsn)
     drv, err := sql.Open(dialect.Postgres, dsn)
@@ -98,8 +108,8 @@ func main() {
     defer client.Close()
 
     router := api.NewRouter(client)
-    log.Println("CO API running on :8080")
-    if err := router.Run(*httpPort); err != nil {
+    log.Println("CO API running on :", cfg.Server.Port)
+    if err := router.Run(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil {
         log.Fatal(err)
     }
 

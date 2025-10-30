@@ -15,6 +15,7 @@ const (
 	StatusStarted   DeploymentStatus = "started"
 	StatusRunning   DeploymentStatus = "in-progress"
 	StatusCompleted DeploymentStatus = "completed"
+	StatusSuccess   DeploymentStatus = "success"
 	StatusFailed    DeploymentStatus = "failed"
 )
 
