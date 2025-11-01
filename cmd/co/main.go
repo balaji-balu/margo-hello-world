@@ -11,8 +11,8 @@ import (
 
     "github.com/balaji-balu/margo-hello-world/ent"
     "github.com/balaji-balu/margo-hello-world/internal/api"
-    cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
-    fsmloader "github.com/balaji-balu/margo-hello-world/internal/fsm"
+    "github.com/balaji-balu/margo-hello-world/internal/config"
+    "github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 
     "google.golang.org/grpc"
     "entgo.io/ent/dialect"

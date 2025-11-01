@@ -21,9 +21,9 @@ import (
 func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byte) {
     //log.Println("✅ Updated desiredstate.yaml from CO registry")
 
-    fmt.Println("applyDeployment.Current State:", lo.machine.Current())
+    //fmt.Println("applyDeployment.Current State:", lo.machine.Current())
 
-    fmt.Println("New State:", lo.machine.Current())
+    //fmt.Println("New State:", lo.machine.Current())
    
     var dply deployment.ApplicationDeployment
     if err := yaml.Unmarshal(yamlData, &dply); err != nil {
@@ -60,10 +60,10 @@ func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byt
         log.Println("keyLocation:", c.Properties.KeyLocation)
 
         // TODO: Apply logic here — e.g., send to Edge Node(s)
-        if err := lo.machine.Event(ctx, "verify_success"); err != nil {
-            fmt.Println("❌ Error:", err)
-            return
-        }
+        // if err := lo.machine.Event(ctx, "verify_success"); err != nil {
+        //     fmt.Println("❌ Error:", err)
+        //     return
+        // }
         fmt.Println("→:", lo.machine.Current())
 
         req := deployment.DeployRequest{
@@ -82,7 +82,7 @@ func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byt
             return
         }
 
-        if err := lo.machine.Event(ctx, "edge_accepted"); err != nil {
+        if err := lo.machine.Event(ctx, "start_deployment"); err != nil {
             return
         }
 

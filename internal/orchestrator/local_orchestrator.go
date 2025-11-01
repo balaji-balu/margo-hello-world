@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+    "context"
     "log"
     "os"
     "fmt"
@@ -11,7 +12,8 @@ import (
     // "entgo.io/ent/dialect/sql"
 
     //"github.com/looplab/fsm"
-    fsmloader "github.com/balaji-balu/margo-hello-world/internal/fsm"
+    //fsmloader "github.com/balaji-balu/margo-hello-world/internal/fsm"
+    "github.com/balaji-balu/margo-hello-world/internal/fsmloader"
     "github.com/balaji-balu/margo-hello-world/pkg/deployment"
     "github.com/looplab/fsm"
     "go.uber.org/zap"
@@ -41,6 +43,9 @@ type LocalOrchestrator struct {
     //Hosturls []string
     Hosts []string
     machine *fsm.FSM
+    //machine *fsm.FSMWrapper
+    //Callback CallbackHandler
+    //fsm     *fsm.FSM
     logger *zap.Logger
 }
 
@@ -49,18 +54,31 @@ type RegisterRequest struct {
 }
 
 func NewLocalOrchestrator(fsmPath string) *LocalOrchestrator {
-    
+    ctx := context.Background()
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		log.Fatalf("failed to initialize zap: %v", err)
 	}
-        
-    m, err := fsmloader.LoadFSM(fsmPath)
-    if err != nil {
-        return nil //, fmt.Errorf("failed to load LO FSM: %w", err)
-    }
+	defer logger.Sync()
 
-    log.Printf("LO FSM initialized at state: %s", m.Current())
+    //ctx := logger.Sugar()
+
+
+    cb := fsmloader.NewCallbacks(ctx, logger)
+	machine, err := fsmloader.LoadFSMConfig("./configs/lo_fsm_resilient.yaml", logger, cb)
+	if err != nil {
+		logger.Fatal("Failed to initialize FSM", zap.Error(err))
+	}
+	log.Println("FSM initialized at state:", machine.Current())
+          
+    //m, err := fsmloader.LoadFSM(fsmPath, callbackHandler{logger: logger})
+    //if err != nil {
+    //    return nil //, fmt.Errorf("failed to load LO FSM: %w", err)
+    //}
+    //callbacks := fsmloader.GetCallbacks(logger)
+	//machine := fsmloader.BuildFSM(cfg, callbacks)
+
+    //log.Printf("LO FSM initialized at state: %s", m.Current())
 
     lo := &LocalOrchestrator{
         Config: Config{
@@ -69,11 +87,11 @@ func NewLocalOrchestrator(fsmPath string) *LocalOrchestrator {
             Token: os.Getenv("GITHUB_TOKEN"),
             Path: os.Getenv("GITHUB_PATH"),
         },
-        machine: m,
+        machine: machine,
         logger: logger,
     }
 
-    log.Printf("LO FSM initialized at state: %s", lo.machine.Current())
+    //log.Printf("LO FSM initialized at state: %s", lo.machine.Current())
 
     lo.LoadJournal()
     return lo
@@ -94,6 +112,12 @@ func (lo *LocalOrchestrator) RegisterRequest(c *gin.Context) {
 	log.Println("✅ Registering edge:", req.EdgeURL)
 	lo.Hosts = append(lo.Hosts, req.EdgeURL)
 
+    lo.logger.Info("Node registration", zap.String("node_id", req.EdgeURL))
+
+    if lo.machine.Current() == "waiting_for_nodes" {
+        lo.machine.Event(c.Request.Context(), "node_registered")
+    }
+
 	// Respond success
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "edge registered successfully",
@@ -105,24 +129,23 @@ func (lo *LocalOrchestrator) DeployStatus(c *gin.Context) {
     var status deployment.DeploymentReport
     ctx := c.Request.Context()
 
-
     if err := c.ShouldBindJSON(&status); err != nil {
         log.Println("❌ Invalid deploy status request:", err)
         return
     }
 
     if status.Status == deployment.StatusSuccess {
-        if err := lo.machine.Event(c, "edge_accepted"); err != nil {
+        if err := lo.machine.Event(ctx, "edge_accepted"); err != nil {
             fmt.Println("❌ Error:", err)
             return
         }
     } else if status.Status == deployment.StatusStarted {
     } else if status.Status == deployment.StatusRunning {
     } else if status.Status == deployment.StatusCompleted {
-        if err := lo.machine.Event(ctx, "edge_rejected"); err != nil {
-            fmt.Println("❌ Error:", err)
-            return
-        }
+        // if err := lo.machine.Event(ctx, "edge_rejected"); err != nil {
+        //     fmt.Println("❌ Error:", err)
+        //     return
+        // }
     } else if status.Status == deployment.StatusFailed {
         log.Println("deploy failed status edge_rejected calling")
         if err := lo.machine.Event(ctx, "edge_rejected"); err != nil {
@@ -134,11 +157,21 @@ func (lo *LocalOrchestrator) DeployStatus(c *gin.Context) {
 
     }
 
-
     log.Println("deploy app name", status.AppName) 
     log.Println("deploy status", status.Status) 
     log.Println("deploy message", status.Message)
 
+}
+
+func (lo *LocalOrchestrator) OnTransition(event, src, dst string) {
+    lo.logger.Info("FSM transition",
+        zap.String("event", event),
+        zap.String("src", src),
+        zap.String("dst", dst))
+}
+
+func (lo *LocalOrchestrator) OnError(event string, err error) {
+    lo.logger.Error("FSM error", zap.String("event", event), zap.Error(err))
 }
 
 // func (lo *LocalOrchestrator) ApplyDeployment(data []byte) {

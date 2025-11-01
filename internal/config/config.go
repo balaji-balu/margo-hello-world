@@ -1,4 +1,4 @@
-package cfffg
+package config
 
 import (
 	"fmt"

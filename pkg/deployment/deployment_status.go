@@ -20,7 +20,10 @@ const (
 )
 
 type DeploymentReport struct {
+	NodeID  string           `json:"node_id"`		
 	AppName string           `json:"app_name"`
 	Status  DeploymentStatus `json:"status"`
 	Message string           `json:"message,omitempty"`
+	State   string           `json:"state"`
+	Timestamp    string           `json:"time"`
 }

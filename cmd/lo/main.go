@@ -18,6 +18,8 @@ import (
 
 	cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
+	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
+	//"go.uber.org/zap"
 )
 
 func init() {
@@ -38,8 +40,19 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
+
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current working directory:", err)
+		return
+	}
+
+	fmt.Println("Current working directory:", dir)
+
+	
 	// Create Local Orchestrator (FSM logic)
-	lo := orchestrator.NewLocalOrchestrator("./configs/fsm_lo.yaml")
+	lo := orchestrator.NewLocalOrchestrator("./configs/lo_fsm_resilient.yaml")
+	//lo.machine = machine
 
 	var wg sync.WaitGroup
 
@@ -118,3 +131,26 @@ func main() {
 	wg.Wait()
 	log.Println("✅ Clean exit.")
 }
+
+
+// func simulateFSM(machine *fsm.FSM, logger *zap.Logger) {
+// 	events := []string{
+// 		"receive_request",
+// 		"start_deployment",
+// 		"nodes_all_running",
+// 		"deployment_complete",
+// 		"connection_lost",
+// 		"connection_restored",
+// 		"node_unreachable",
+// 		"node_recovered",
+// 		"reset",
+// 	}
+
+// 	for _, e := range events {
+// 		logger.Info(fmt.Sprintf("Triggering event: %s", e))
+// 		if err := machine.Event(context.Background(), e); err != nil {
+// 			logger.Warn("Event failed", zap.String("event", e), zap.Error(err))
+// 		}
+// 		time.Sleep(500 * time.Millisecond)
+// 	}
+// }

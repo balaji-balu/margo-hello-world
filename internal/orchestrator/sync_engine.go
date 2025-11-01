@@ -20,10 +20,14 @@ func (lo *LocalOrchestrator) Poll(ctx context.Context) {
     }
 
     if len(lo.Hosts) == 0 {
-        if err := lo.machine.Event(ctx, "no_edges"); err != nil {
-            fmt.Println("❌ Poll: Error")
-        }
+        lo.logger.Warn("No nodes registered, entering waiting_for_nodes state")
+        lo.machine.Event(ctx, "no_nodes_available")
         return
+
+        // if err := lo.machine.Event(ctx, "no_edges"); err != nil {
+        //     fmt.Println("❌ Poll: Error")
+        // }
+        // return
     }
 
     lo.logger.Info("Poll:Polling for changes...", 

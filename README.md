@@ -93,5 +93,14 @@ docker run -d --name otel-collector   -p 4317:4317   -p 4318:4318   -v $(pwd)/co
 
 
 Reference:
-- chargpt "Hello world prototype" https://chatgpt.com/c/68f57881-0720-8321-a714-eef84194b083
+- chatgpt "Hello world prototype" https://chatgpt.com/c/68f57881-0720-8321-a714-eef84194b083
 
+
+- zap() for logging
+- offline first
+- hierarchical FSM(finite state machine) using loopfsm
+- Github access ( or gitlab or bitbucket )
+- otel for observability
+- webportal and cli 
+- co, lo, en (draw the digram)
+- atlas and ent and postgres
