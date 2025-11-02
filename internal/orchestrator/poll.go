@@ -64,7 +64,7 @@ func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byt
         //     fmt.Println("❌ Error:", err)
         //     return
         // }
-        fmt.Println("→:", lo.machine.Current())
+        fmt.Println("→:", lo.FSM.Current())
 
         req := deployment.DeployRequest{
 	    	AppName: dply.Metadata.Name,
@@ -74,7 +74,7 @@ func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byt
         }
         if err := PostDeployment(req, lo.Hosts, c); err != nil {
             log.Println("1. PostDeployment Error:", err)
-            if err := lo.machine.Event(ctx, "edge_rejected"); err != nil {
+            if err := lo.FSM.Event(ctx, "edge_rejected"); err != nil {
                 fmt.Println("❌ Error:", err)
                 return
             }
@@ -82,11 +82,11 @@ func (lo *LocalOrchestrator) applyDeployment(ctx context.Context, yamlData []byt
             return
         }
 
-        if err := lo.machine.Event(ctx, "start_deployment"); err != nil {
+        if err := lo.FSM.Event(ctx, "start_deployment"); err != nil {
             return
         }
 
-        fmt.Println("→", lo.machine.Current())
+        fmt.Println("→", lo.FSM.Current())
     }
 }
 

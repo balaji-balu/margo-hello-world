@@ -22,6 +22,13 @@ type Config struct {
 	LO struct {
 		URL string `yaml:"url"`
 	} `yaml:"lo"`
+	NATS struct {
+		URL string `yaml:"url"`
+	} `yaml:"nats"`
+	Git struct {
+		Repo   string `yaml:"repo"`
+		Branch string `yaml:"branch"`
+	}
 }
 
 func LoadConfig(path string) (*Config, error) {

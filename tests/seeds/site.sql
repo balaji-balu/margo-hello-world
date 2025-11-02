@@ -9,3 +9,22 @@ VALUES
   ('site-002', 'Bangalore-Site', 'Secondary site in Bangalore', 'Bangalore, India', '550e8400-e29b-41d4-a716-446655440000', NOW(), NOW())
 ON CONFLICT (site_id) DO NOTHING;
 
+INSERT INTO site (
+    id,
+    site_id,
+    name,
+    description,
+    location,
+    orchestrator_id,
+    created_at,
+    updated_at
+) VALUES (
+    gen_random_uuid(),
+    'site-003',
+    'Tiruvannamalai-Site-1',
+    'Backup site in Tiruvannamalai',
+    'Tiruvannamalai, TN, India',
+    '550e8400-e29b-41d4-a716-446655440000',
+    NOW(),
+    NOW()
+);

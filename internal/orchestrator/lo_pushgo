@@ -1,0 +1,41 @@
+package orchestrator
+
+import (
+	"context"
+//"encoding/json"
+	"log"
+
+    "github.com/balaji-balu/margo-hello-world/internal/gitobserver"
+    "github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+    . "github.com/balaji-balu/margo-hello-world/internal/config"
+)
+
+func (lo *LocalOrchestrator) RunPush(ctx context.Context, cfg *Config) error {
+    b, err := natsbroker.New(cfg.NATS.URL)
+    if err != nil {
+        return err
+    }
+
+    // subscribe to global subject; filter by site
+    err = b.Subscribe("git.desiredstate.changed", func(ev gitobserver.GitEvent) {
+        //var ev gitobserver.GitEvent
+        // if err := json.Unmarshal(bts, &ev); err != nil {
+        //     log.Printf("invalid payload: %v", err)
+        //     return
+        // }
+        if ev.Site != cfg.Server.Site && ev.Site != "*" {
+            // not for us
+            return
+        }
+        log.Printf("[LO-%s] Received push event: %v", cfg.Server.Site, ev)
+        // TODO: trigger FSM event here
+    })
+    if err != nil {
+        return err
+    }
+
+    // block until context canceled
+    <-ctx.Done()
+    b.Close()
+    return ctx.Err()
+}

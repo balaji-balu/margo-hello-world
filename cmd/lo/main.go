@@ -1,4 +1,4 @@
-// file: lo/main.go
+// file: cmd/lo/main.go
 package main
 
 import (
@@ -9,17 +9,18 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
+	//"sync"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
+
 
 	cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
-	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
-	//"go.uber.org/zap"
+	"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 )
 
 func init() {
@@ -29,128 +30,85 @@ func init() {
 }
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+    // ------------------------------------------------------------
+    // 1️⃣ Context + Logger setup
+    // ------------------------------------------------------------
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
 
 	configPath := flag.String("config", "./configs/lo1.yaml", "path to config file")
 	flag.Parse()
 
 	cfg, err := cfffg.LoadConfig(*configPath)
 	if err != nil {
-		log.Fatalf("error loading config: %v", err)
+		log.Fatalf("❌ error loading config: %v", err)
 	}
 
+	logger, _ := zap.NewProduction()
+    defer logger.Sync()
 
-	dir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error getting current working directory:", err)
-		return
-	}
+    log.Println("🚀 Starting adaptive mode manager...")
 
-	fmt.Println("Current working directory:", dir)
+    // ------------------------------------------------------------
+    // 2️⃣ Setup orchestrator + FSM loader
+    // ------------------------------------------------------------
+    lo := orchestrator.New(ctx, cfg, logger)
+    loader := fsmloader.NewLoader(ctx, logger, lo)
+    lo.FSM = loader.FSM // ensure both share same FSM instance
 
-	
-	// Create Local Orchestrator (FSM logic)
-	lo := orchestrator.NewLocalOrchestrator("./configs/lo_fsm_resilient.yaml")
-	//lo.machine = machine
+    // ------------------------------------------------------------
+    // 3️⃣ Setup Gin router
+    // ------------------------------------------------------------
+    r := gin.Default()
+    r.GET("/health", func(c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{"status": "ok"})
+    })
 
-	var wg sync.WaitGroup
+    r.POST("/register", lo.RegisterRequest)
+    r.POST("/deployment_status", lo.DeployStatus)
 
-	// ------------------------------
-	// 🌐 Setup Gin HTTP Server
-	// ------------------------------
-	r := gin.Default()
+    srv := &http.Server{
+        Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
+        Handler: r,
+    }
 
-	api := r.Group("")
-	{
-		api.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"status": "ok"})
-		})
-		api.POST("/register", lo.RegisterRequest)
-		api.POST("/deployment_status", lo.DeployStatus)
-	}
+    // ------------------------------------------------------------
+    // 4️⃣ Start orchestrator and HTTP server
+    // ------------------------------------------------------------
+    go lo.StartModeLoop(ctx)
 
-	httpSrv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
-		Handler: r,
-	}
+    go func() {
+        logger.Info("🌐 HTTP server started on :9102 (Gin)")
+        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            logger.Fatal("HTTP server crashed", zap.Error(err))
+        }
+    }()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		log.Printf("🌐 HTTP server started on %s (Gin)", httpSrv.Addr)
-		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("❌ HTTP server error: %v", err)
-		}
-	}()
+    // ------------------------------------------------------------
+    // 5️⃣ Handle shutdown signals
+    // ------------------------------------------------------------
+    stop := make(chan os.Signal, 1)
+    signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	// ------------------------------
-	// ⚙️ Start Orchestrator Loop
-	// ------------------------------
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case <-ctx.Done():
-				log.Println("🌀 FSM loop exiting...")
-				return
-			default:
-				mode := lo.DetectMode()
-				switch mode {
-				case orchestrator.PushPreferred:
-					lo.WaitForWebhook(ctx)
-				case orchestrator.AdaptivePull:
-					lo.Poll(ctx)
-				case orchestrator.OfflineDeterministic:
-					lo.ScanLocalInbox(ctx)
-				default:
-					log.Println("Unknown mode, defaulting to AdaptivePull")
-					lo.Poll(ctx)
-				}
-			}
+    <-stop
+    log.Println("🛑 Shutdown signal received...")
+    cancel() // broadcast cancel to all goroutines
 
-			lo.PersistJournal()
-			time.Sleep(5 * time.Second)
-		}
-	}()
+    // ------------------------------------------------------------
+    // 6️⃣ Gracefully stop HTTP server
+    // ------------------------------------------------------------
+    shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer shutdownCancel()
 
-	// ------------------------------
-	// 🧹 Graceful Shutdown
-	// ------------------------------
-	<-ctx.Done()
-	log.Println("🛑 Shutdown signal received...")
+    if err := srv.Shutdown(shutdownCtx); err != nil {
+        logger.Error("HTTP server forced to shutdown", zap.Error(err))
+    } else {
+        logger.Info("HTTP server shutdown gracefully")
+    }
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := httpSrv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("❌ Error shutting down HTTP server: %v", err)
-	}
-
-	wg.Wait()
-	log.Println("✅ Clean exit.")
+    // ------------------------------------------------------------
+    // 7️⃣ Final cleanup
+    // ------------------------------------------------------------
+    time.Sleep(500 * time.Millisecond)
+    logger.Info("🧹 All systems stopped. Goodbye!")
 }
-
-
-// func simulateFSM(machine *fsm.FSM, logger *zap.Logger) {
-// 	events := []string{
-// 		"receive_request",
-// 		"start_deployment",
-// 		"nodes_all_running",
-// 		"deployment_complete",
-// 		"connection_lost",
-// 		"connection_restored",
-// 		"node_unreachable",
-// 		"node_recovered",
-// 		"reset",
-// 	}
-
-// 	for _, e := range events {
-// 		logger.Info(fmt.Sprintf("Triggering event: %s", e))
-// 		if err := machine.Event(context.Background(), e); err != nil {
-// 			logger.Warn("Event failed", zap.String("event", e), zap.Error(err))
-// 		}
-// 		time.Sleep(500 * time.Millisecond)
-// 	}
-// }

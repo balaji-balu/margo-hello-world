@@ -13,7 +13,7 @@ import (
 
 func (lo *LocalOrchestrator) Poll(ctx context.Context) {
 
-    if err := lo.machine.Event(ctx, "receive_request"); err != nil {
+    if err := lo.FSM.Event(ctx, "receive_request"); err != nil {
         fmt.Println("❌ Poll: Error:", err)
         lo.logger.Error("Poll: Error:", zap.String("error", err.Error()))
         return
@@ -21,7 +21,7 @@ func (lo *LocalOrchestrator) Poll(ctx context.Context) {
 
     if len(lo.Hosts) == 0 {
         lo.logger.Warn("No nodes registered, entering waiting_for_nodes state")
-        lo.machine.Event(ctx, "no_nodes_available")
+        lo.FSM.Event(ctx, "no_nodes_available")
         return
 
         // if err := lo.machine.Event(ctx, "no_edges"); err != nil {
@@ -88,6 +88,7 @@ func (lo *LocalOrchestrator) PollWithETag(ctx context.Context) {
 func (lo *LocalOrchestrator) WaitForWebhook(ctx context.Context) {
     log.Println("Webhook mode not yet active; falling back to AdaptivePull")
     //lo.PollWithETag(ctx)
+    //lo.RunPush(ctx, nil)
 }
 
 func (lo *LocalOrchestrator) ScanLocalInbox(ctx context.Context) {

@@ -1,9 +1,17 @@
 server:
   port: 9101
   name: "central orchestrator"
-  interval: 30s
-  repo_owner: edge-orchestration-platform
-  repo_name: deployments
-  yaml_path: site-1/com-balaji-compose-a/desiredstate.yaml
+  # interval: 30s
+  # repo_owner: edge-orchestration-platform
+  # repo_name: deployments
+  # yaml_path: site-1/com-balaji-compose-a/desiredstate.yaml
 
+git:
+  repo: https://github.com/edge-orchestration-platform/deployments
+  branch: main
+  private: true
+  token_env: GITHUB_TOKEN
+mode: push
+nats:
+  url: nats://localhost:4222
 

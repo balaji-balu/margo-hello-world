@@ -8,8 +8,17 @@ meta:
     resync_retry: 10        # seconds between resync attempts
   retry_policy:
     resync_max_attempts: 5
-
 events:
+  - name: enable_push
+    src: ["idle", "pulling", "offline"]
+    dst: pushing
+
+  - name: enable_pull
+    src: ["idle", "pushing", "offline"]
+    dst: pulling
+
+
+
   # Normal deployment 
   
   - name: no_nodes_available

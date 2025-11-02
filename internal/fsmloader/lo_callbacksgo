@@ -9,6 +9,11 @@ import (
 type Callbacks struct {
 	ctx    context.Context
 	logger *zap.Logger
+
+    // Mode actions (hooked to FSM on_enter_* callbacks)
+    //StartPushMode    func(cfg any)
+    //StartPullMode    func(cfg any)
+    //StartOfflineMode func(cfg any)	
 }
 
 func NewCallbacks(ctx context.Context, logger *zap.Logger) *Callbacks {
@@ -19,6 +24,20 @@ func NewCallbacks(ctx context.Context, logger *zap.Logger) *Callbacks {
 func (cb *Callbacks) OnEnterState(ctx context.Context, e *fsm.Event) {
 	cb.logger.Info("🔁 Entering state", zap.String("state", e.Dst))
 	switch e.Dst {
+	cb.logger.Info("🔁 Entering state", zap.String("state", e.Dst))
+	switch e.Dst {
+	case "pushing":
+		if cb.StartPushMode != nil {
+			cb.StartPushMode(cb.ctx, nil) // pass real cfg if available
+		}
+	case "pulling":
+		if cb.StartPullMode != nil {
+			cb.StartPullMode(cb.ctx, nil)
+		}
+	case "offline":
+		if cb.StartOfflineMode != nil {
+			cb.StartOfflineMode(cb.ctx, nil)
+		}
 	case "pending":
 		cb.logger.Info("📦 Deployment request received")
 	case "deploying":

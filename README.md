@@ -104,3 +104,12 @@ Reference:
 - webportal and cli 
 - co, lo, en (draw the digram)
 - atlas and ent and postgres
+
+
+get started :
+
+1. start postgres, nats containers
+at the root directory, run 
+$ podman-compose up -d
+2. execute postgres psql 
+$ docker exec -it postgres psql -U postgres -d orchestration

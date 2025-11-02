@@ -13,6 +13,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  nats:
+    image: docker.io/library/nats:latest
+    ports:
+      - "4222:4222" # Client port
+      - "8222:8222" # Monitoring port (optional)
+    # command: -js # Enable JetStream if desired
+    # volumes:
+    #   - ./nats-data:/data # Optional: for persistent JetStream data
+
   # migrate:
   #   image: docker.io/arigaio/atlas:latest
   #   container_name: atlas-migrate
