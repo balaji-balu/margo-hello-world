@@ -1,48 +1,50 @@
 package main
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	//"os/exec"
 	//"path/filepath"
+	"flag"
+	"math/rand"
+	"os/exec"
 	"time"
 
-	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	//"github.com/google/go-containerregistry/pkg/authn"
-//"github.com/google/go-containerregistry/pkg/name"
+	//"github.com/google/go-containerregistry/pkg/name"
 	//"github.com/google/go-containerregistry/pkg/v1/remote"
 	//"github.com/google/go-containerregistry/pkg/v1/tarball"
-
+	"go.uber.org/zap"
+	//"github.com/nats-io/nats.go"
 	"github.com/joho/godotenv"
-	"os"
 	"oras.land/oras-go/v2"
+	"oras.land/oras-go/v2/content/oci"
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
-	"oras.land/oras-go/v2/content/oci"
-
-	"os/exec"
-	"flag"
+	"os"
 
 	//"oras.land/oras-go/v2/content/file"
 	"github.com/balaji-balu/margo-hello-world/internal/config"
-	"go.uber.org/zap"
-	"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 	"github.com/balaji-balu/margo-hello-world/internal/edgenode"
-
+	"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
+	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+	"github.com/balaji-balu/margo-hello-world/pkg"
+	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 )
 
-var localOrchestratorURL string  // LO endpoint
+var localOrchestratorURL string // LO endpoint
 
 func init() {
-    err := godotenv.Load("./.env") // relative path to project root
-    if err != nil {
-        log.Println("No .env file found, reading from system environment")
-    }
+	err := godotenv.Load("./.env") // relative path to project root
+	if err != nil {
+		log.Println("No .env file found, reading from system environment")
+	}
 }
+
 /*
 func reportStatus(app string, status deployment.DeploymentStatus, msg string, nodeFSM *fsmloader.EdgeNodeFSM) {
 	report := deployment.DeploymentReport{
@@ -91,7 +93,7 @@ func register(edgeURL string) error {
 	return nil
 }
 
-func handleDeploy(en *edgenode.EdgeNode,w http.ResponseWriter, r *http.Request, 
+func handleDeploy(en *edgenode.EdgeNode, w http.ResponseWriter, r *http.Request,
 	nodeFSM *fsmloader.EdgeNodeFSM) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", 405)
@@ -106,22 +108,22 @@ func handleDeploy(en *edgenode.EdgeNode,w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	log.Println("Received deploy request for:", 
+	log.Println("Received deploy request for:",
 		req.AppName, req.Image, req.Token, req.Revision)
 
 	ctx := context.Background()
 
 	// if err := nodeFSM.FSM.Event(ctx, "start_deployment"); err != nil {
-    //     //nodeFSM.logger.Error("Cannot start deployment", zap.Error(err))
-    //     return
-    // }
+	//     //nodeFSM.logger.Error("Cannot start deployment", zap.Error(err))
+	//     return
+	// }
 
 	nodeFSM.StartDeployment(ctx, []string{req.AppName})
 
 	// ✅ Split repo and tag
 	//repoName := "ghcr.io/edge-orchestration-platform/edge-onnx-sample"
 	//tag := "8996d9c5b7a689283fbea25b8a6b5757d6b6bc5e"
-	image := fmt.Sprintf("%s:%s",req.Image, req.Revision)
+	image := fmt.Sprintf("%s:%s", req.Image, req.Revision)
 
 	token := os.Getenv("GITHUB_TOKEN") // your GitHub token
 
@@ -163,7 +165,7 @@ func handleDeploy(en *edgenode.EdgeNode,w http.ResponseWriter, r *http.Request,
 	cmd := exec.Command("docker", "run", "-d", "--name", req.Revision, image)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		en.ReportStatus(req.AppName, "failed", 
+		en.ReportStatus(req.AppName, "failed",
 			fmt.Sprintf("Docker run error: %v, output: %s", err, string(out)),
 			nodeFSM.FSM.Current(),
 		)
@@ -179,12 +181,11 @@ func handleDeploy(en *edgenode.EdgeNode,w http.ResponseWriter, r *http.Request,
 	containerID := string(bytes.TrimSpace(out))
 	log.Printf("✅ Container started: %s", containerID)
 
-
 	// Step 3️⃣ — Check container status
 	statusCmd := exec.Command("docker", "inspect", "-f", "{{.State.Status}}", req.AppName)
 	statusOut, err := statusCmd.CombinedOutput()
 	if err != nil {
-		en.ReportStatus(req.AppName, 
+		en.ReportStatus(req.AppName,
 			"failed", fmt.Sprintf("Inspect failed: %v", err), nodeFSM.FSM.Current())
 		http.Error(w, fmt.Sprintf("Failed to check container status: %v", err), 500)
 		return
@@ -192,13 +193,12 @@ func handleDeploy(en *edgenode.EdgeNode,w http.ResponseWriter, r *http.Request,
 	status := string(bytes.TrimSpace(statusOut))
 	log.Printf("Container status: %s", status)
 
-
 	log.Println("✅ OCI image pulled successfully!")
 	w.Write([]byte("Deployment image pulled successfully"))
 
-	en.ReportStatus(req.AppName, "success", 
+	en.ReportStatus(req.AppName, "success",
 		"Deployment image pulled successfully", nodeFSM.FSM.Current())
-	
+
 }
 
 func main() {
@@ -211,10 +211,9 @@ func main() {
 		log.Fatalf("❌ Error loading config: %v", err)
 	}
 
-	log.Printf("✅ Loaded config: domain=%s, port=%d, LO URL=%s",
-		cfg.Server.Domain, cfg.Server.Port, cfg.LO.URL)
+	log.Println("✅ Loaded config: ", cfg.Server)
 
-	localOrchestratorURL = cfg.LO.URL
+	//localOrchestratorURL = cfg.LO.URL
 	en := edgenode.NewEdgeNode(localOrchestratorURL)
 
 	// Initialize logger and context
@@ -226,7 +225,11 @@ func main() {
 	nodeFSM := fsmloader.NewEdgeNodeFSM(ctx, "edge-node-1", en, logger)
 
 	// Register with Local Orchestrator
-	register(fmt.Sprintf("http://%s:%d", cfg.Server.Domain, cfg.Server.Port))
+	//register(fmt.Sprintf("http://%s:%d", cfg.Server.Domain, cfg.Server.Port))
+	log.Printf("nats url", cfg.NATS.URL)
+	nc, err := natsbroker.New(cfg.NATS.URL)
+	startHeartbeat(nc, cfg.Server.Site, cfg.Server.Node, cfg.Server.Runtime, cfg.Server.Region)
+	startDeployListener(nc, cfg.Server.Site, cfg.Server.Node, cfg.Server.Runtime)
 
 	// Define HTTP handlers
 	http.HandleFunc("/deploy", func(w http.ResponseWriter, r *http.Request) {
@@ -239,4 +242,112 @@ func main() {
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("❌ Server failed to start: %v", err)
 	}
+}
+
+func startHeartbeat(nc *natsbroker.Broker, siteID, nodeID, runtime, region string) {
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		for range ticker.C {
+			msg := pkg.HealthMsg{
+				NodeID:     nodeID,
+				SiteID:     siteID,
+				CPUPercent: rand.Float64() * 20,
+				MemMB:      50 + rand.Float64()*20,
+				Timestamp:  time.Now().Unix(),
+				Runtime:    runtime,
+				Region:     region,
+			}
+			//data, _ := json.Marshal(msg)
+			subj := fmt.Sprintf("health.%s.%s", siteID, nodeID)
+			if err := nc.Publish(subj, msg); err != nil {
+				log.Println("Heart publish failed:", err)
+			} else {
+				log.Println("Heart msg published", subj)
+				nc.Flush()
+			}
+			//log.Println("Heart msg published", id)
+		}
+	}()
+}
+
+func startDeployListener(nc *natsbroker.Broker, siteID, nodeID, runtime string) {
+	subj := fmt.Sprintf("site.%s.deploy.%s", siteID, nodeID)
+	nc.Subscribe3(subj, func(req deployment.DeployRequest) {
+		log.Printf("req:", req)
+		log.Printf("[EN %s] deploy request received (%s)", nodeID, runtime)
+		success := true
+		statusMsg := "Deployment successful"
+
+		if runtime == "wasm" {
+			for _, w := range req.WasmImages {
+				log.Println("[EN] Running wasm:", w)
+				err := deployWorkload(w, runtime)
+				if err != nil {
+					//fsm.Transition(shared.Deploying)
+					success = false
+					statusMsg = fmt.Sprintf("WASM deploy failed for %s: %v", w, err)
+					break
+				}
+			}
+		} else {
+			for _, img := range req.ContainerImages {
+				log.Println("[EN] Running container:", img)
+				err := deployWorkload(img, runtime)
+				if err != nil {
+					//fsm.Transition(shared.Deploying)
+					success = false
+					statusMsg = fmt.Sprintf("Container deploy failed for %s: %v", img, err)
+					break
+				}
+			}
+		}
+
+		// Publish deployment status
+		status := deployment.DeploymentReport{
+			DeploymentID: req.DeploymentID,
+			NodeID:       nodeID,
+			SiteID:       siteID,
+			Status:       "completed",
+			Message:      statusMsg,
+			Timestamp:    time.Now().Format(time.RFC3339),
+		}
+		//data, _ := json.Marshal(status)
+		statusSubj := fmt.Sprintf("status.%s.%s", siteID, nodeID)
+		if err := nc.Publish(statusSubj, status); err != nil {
+			log.Println("[EN] failed to publish status:", err)
+		} else {
+			log.Printf("[EN] status published: %s (success=%v)", statusSubj, success)
+		}
+		nc.Flush()
+		//fsm.Transition(shared.Running)
+	})
+}
+
+func deployWorkload(imageRef, runtimeType string) error {
+	log.Println("Deploying workload:", imageRef, "Runtime:", runtimeType)
+	/*
+		fetcher := ocifetch.Fetcher{
+			RegistryURL: "oci://ghcr.io/edge-orchestration-platform",
+			Ref:         "edge-onnx-sample:latest", // or from desiredstate.yaml
+			Token:       os.Getenv("GITHUB_TOKEN"),
+			OutputDir:   "/tmp/oci-artifacts",
+		}
+
+		if err := fetcher.Fetch(); err != nil {
+			log.Println("[EN] OCI fetch failed:", err)
+		} else {
+			log.Println("[EN] OCI fetch success")
+		}
+		//log.Println("result:", result)
+		if runtimeType == "wasm" {
+			//cmd := exec.Command("wasmedge", filepath.Join(result.DirPath, "edge-ai.wasm"))
+			//return cmd.Run()
+			return nil
+		} else {
+			//cmd := exec.Command("podman", "run", "--rm", imageRef)
+			//return cmd.Run()
+			return nil
+		}
+	*/
+	return nil
 }

@@ -15,15 +15,15 @@ type DeploymentProfile struct {
 }
 
 func (DeploymentProfile) Fields() []ent.Field {
-	return []ent.Field{field.String("id"), 
-	field.String("type").Optional(), 
-	field.String("description").Optional(), 
-	field.Float("cpu_cores").Optional(), field.String("memory").Optional(), 
-	field.String("storage").Optional(), 
-	field.JSON("cpu_architectures", []string{}).Optional(), 
-	field.JSON("peripherals", []map[string]interface{}{}).Optional(), 
-	field.JSON("interfaces", []map[string]interface{}{}).Optional(), 
-	field.String("app_id").Optional()}
+	return []ent.Field{field.String("id"),
+		field.String("type").Optional(),
+		field.String("description").Optional(),
+		field.Float("cpu_cores").Optional(), field.String("memory").Optional(),
+		field.String("storage").Optional(),
+		field.JSON("cpu_architectures", []string{}).Optional(),
+		field.JSON("peripherals", []map[string]interface{}{}).Optional(),
+		field.JSON("interfaces", []map[string]interface{}{}).Optional(),
+		field.String("app_id").Optional()}
 
 }
 func (DeploymentProfile) Edges() []ent.Edge {

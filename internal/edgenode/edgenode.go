@@ -1,4 +1,4 @@
-package edgenode 
+package edgenode
 
 import (
 	"bytes"
@@ -22,17 +22,17 @@ func NewEdgeNode(localOrchestratorURL string) *EdgeNode {
 }
 
 func (edgeNode *EdgeNode) ReportStatus(
-		app string, 
-		status deployment.DeploymentStatus, 
-		msg string, 
-		currentState string) {
+	app string,
+	status deployment.DeploymentStatus,
+	msg string,
+	currentState string) {
 	report := deployment.DeploymentReport{
-		NodeID:  "edge-node-1",
-		AppName: app,
-		Status:  status,
-		Message: msg,
-		State:   currentState,
-		Timestamp:    time.Now().Format(time.RFC3339),
+		NodeID:    "edge-node-1",
+		AppName:   app,
+		Status:    status,
+		Message:   msg,
+		State:     currentState,
+		Timestamp: time.Now().Format(time.RFC3339),
 	}
 	body, _ := json.Marshal(report)
 	url := fmt.Sprintf("%s/deployment_status", edgeNode.localOrchestratorURL)

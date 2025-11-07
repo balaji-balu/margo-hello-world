@@ -1,19 +1,21 @@
 package handlers
 
 import (
-    "github.com/gin-gonic/gin"
 	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
+	"github.com/gin-gonic/gin"
 	"log"
 	//"io"
 	//"net/http"
-	//"encoding/json"	
+	//"encoding/json"
+	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
+	"time"
 )
 
-func DeploymentStatusHandler(c *gin.Context) {
+func DeploymentStatusHandler(c *gin.Context, sm *streammanager.StreamManager) {
 	log.Println("DeploymentStatusHandler called")
 
-	var app deployment.DeploymentReport
-	if err := c.ShouldBindJSON(&app); err != nil {
+	var dr deployment.DeploymentReport
+	if err := c.ShouldBindJSON(&dr); err != nil {
 		log.Println("Error binding JSON:", err)
 		return
 	}
@@ -23,7 +25,7 @@ func DeploymentStatusHandler(c *gin.Context) {
 	// 	return
 	// }
 
-	log.Println("Received deployment status:", app.AppName, app.Message, app.Status )
+	log.Println("Received deployment status:", dr)
 
 	// var status deployment.DeploymentStatus
 	// if err := json.Unmarshal(body, &status); err != nil {
@@ -32,5 +34,14 @@ func DeploymentStatusHandler(c *gin.Context) {
 	// 	return
 	// }
 
-	log.Println("Deployment status:", app.Status)
+	log.Println("Deployment id:", dr.DeploymentID, sm)
+
+	sm.Broadcast(dr.DeploymentID, streammanager.DeployEvent{
+		DeploymentId: dr.DeploymentID,
+		Timestamp:    time.Now().Format(time.RFC3339),
+		SiteID:       "",
+		Message:      dr.Message,
+		Status:       string(dr.Status),
+	})
+
 }

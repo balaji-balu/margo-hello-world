@@ -9,9 +9,12 @@ import (
 
 type Config struct {
 	Server struct {
-		Domain string `yaml:"domain"`
-		Site string `yaml:"site"`
-		Port int    `yaml:"port"`
+		//Domain string `yaml:"domain"`
+		Site    string `yaml:"site"`
+		Node    string `yaml:"node"`
+		Runtime string `yaml:"runtime"`
+		Region  string `yaml:"region"`
+		Port    int    `yaml:"port"`
 	} `yaml:"server"`
 	CO struct {
 		URL string `yaml:"url"`
@@ -27,6 +30,7 @@ type Config struct {
 	} `yaml:"nats"`
 	Git struct {
 		Repo   string `yaml:"repo"`
+		Owner  string `yaml:"owner"`
 		Branch string `yaml:"branch"`
 	}
 }

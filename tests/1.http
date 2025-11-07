@@ -23,4 +23,17 @@ Content-Type: application/json
 ###
 GET http://localhost:8080/api/v1/deployments
 ###
+post http://localhost:9101/api/v1/status
+Content-Type: application/json
 
+{
+    
+  "app_name": "balajis-edge-ai-1762408566",
+  "message": "deployment started",
+  "status": "in-progress",
+  "state": "deploying",
+  "node_id": "co",
+  "time": "2025-11-06T05:20:00Z"
+}
+
+###

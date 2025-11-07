@@ -17,14 +17,14 @@ type Site struct {
 
 func (Site) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}), 
-	field.String("site_id").Unique(), 
-	field.String("name").Optional(), 
-	field.String("description").Optional(), 
-	field.String("location").Optional(), 
-	field.UUID("orchestrator_id", uuid.UUID{}).Optional(), 
-	field.JSON("metadata", struct{}{}).Optional(), 
-	field.Time("created_at").Optional(), field.Time("updated_at").Optional()}
+		field.UUID("id", uuid.UUID{}),
+		field.String("site_id").Unique(),
+		field.String("name").Optional(),
+		field.String("description").Optional(),
+		field.String("location").Optional(),
+		field.UUID("orchestrator_id", uuid.UUID{}).Optional(),
+		field.JSON("metadata", struct{}{}).Optional(),
+		field.Time("created_at").Optional(), field.Time("updated_at").Optional()}
 }
 func (Site) Edges() []ent.Edge {
 	return []ent.Edge{edge.To("hosts", Host.Type), edge.From("orchestrator", Orchestrator.Type).Ref("sites").Unique().Field("orchestrator_id")}

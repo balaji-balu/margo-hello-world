@@ -8,15 +8,15 @@ import (
 )
 
 func Run(ctx context.Context, cfg *Config) error {
-    natsClient, err := natsbroker.New(cfg.NATS.URL)
-    if err != nil {
-        return err
-    }
+	natsClient, err := natsbroker.New(cfg.NATS.URL)
+	if err != nil {
+		return err
+	}
 
-    observer := gitobserver.New(cfg.Git.Repo, cfg.Git.Branch, cfg.SiteFilter)
-    observer.OnChange(func(event gitobserver.GitEvent) {
-        _ = natsClient.Publish("git.desiredstate.changed", event)
-    })
+	observer := gitobserver.New(cfg.Git.Repo, cfg.Git.Branch, cfg.SiteFilter)
+	observer.OnChange(func(event gitobserver.GitEvent) {
+		_ = natsClient.Publish("git.desiredstate.changed", event)
+	})
 
-    return observer.Start(ctx)
+	return observer.Start(ctx)
 }

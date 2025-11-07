@@ -9,8 +9,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-    "github.com/balaji-balu/margo-hello-world/pkg/application"
-	
+	"github.com/balaji-balu/margo-hello-world/pkg/application"
 )
 
 type Component struct {
@@ -18,14 +17,14 @@ type Component struct {
 }
 
 func (Component) Fields() []ent.Field {
-	return []ent.Field{field.Uint("id").SchemaType(map[string]string{"postgres": "serial"}), 
-	field.String("deployment_profile_id").Optional(), 
-	field.String("name").Optional(), 
-	field.JSON("properties", application.ComponentProperties{}).
-            Optional(),
+	return []ent.Field{field.Uint("id").SchemaType(map[string]string{"postgres": "serial"}),
+		field.String("deployment_profile_id").Optional(),
+		field.String("name").Optional(),
+		field.JSON("properties", application.ComponentProperties{}).
+			Optional(),
 
-	//field.JSON("properties").Optional(struct{}{})}
-		}
+		//field.JSON("properties").Optional(struct{}{})}
+	}
 }
 func (Component) Edges() []ent.Edge {
 	return []ent.Edge{edge.From("deployment_profile", DeploymentProfile.Type).Ref("components").Unique().Field("deployment_profile_id")}

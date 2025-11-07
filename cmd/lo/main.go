@@ -16,11 +16,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
-
+	//bolt "go.etcd.io/bbolt"
 
 	cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
-	"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
+	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+	"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
+)
+
+var (
+	//db       *bolt.DB
+	nc *natsbroker.Broker
 )
 
 func init() {
@@ -30,11 +36,11 @@ func init() {
 }
 
 func main() {
-    // ------------------------------------------------------------
-    // 1️⃣ Context + Logger setup
-    // ------------------------------------------------------------
-    ctx, cancel := context.WithCancel(context.Background())
-    defer cancel()
+	// ------------------------------------------------------------
+	// 1️⃣ Context + Logger setup
+	// ------------------------------------------------------------
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	configPath := flag.String("config", "./configs/lo1.yaml", "path to config file")
 	flag.Parse()
@@ -45,70 +51,99 @@ func main() {
 	}
 
 	logger, _ := zap.NewProduction()
-    defer logger.Sync()
+	defer logger.Sync()
 
-    log.Println("🚀 Starting adaptive mode manager...")
+	// Init DB
+	dbPath := "./data/lo/nodes.db"
+	if p := os.Getenv("BOLT_PATH"); p != "" {
+		dbPath = p
+	}
+	db := orchestrator.InitDB(dbPath)
+	defer db.Close()
 
-    // ------------------------------------------------------------
-    // 2️⃣ Setup orchestrator + FSM loader
-    // ------------------------------------------------------------
-    lo := orchestrator.New(ctx, cfg, logger)
-    loader := fsmloader.NewLoader(ctx, logger, lo)
-    lo.FSM = loader.FSM // ensure both share same FSM instance
+	//reset all existing as not alive
+	//TBD: also do reset once the node health is timeout
+	for _, n := range orchestrator.GetAllNodes(db) {
+		n.Alive = false
+		orchestrator.SaveNode(db, n)
+	}
 
-    // ------------------------------------------------------------
-    // 3️⃣ Setup Gin router
-    // ------------------------------------------------------------
-    r := gin.Default()
-    r.GET("/health", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "ok"})
-    })
+	natsURL := cfg.NATS.URL
+	log.Println("Connecting to", natsURL)
 
-    r.POST("/register", lo.RegisterRequest)
-    r.POST("/deployment_status", lo.DeployStatus)
+	nc, err = natsbroker.New(natsURL)
+	//nc, err = nats.Connect(natsURL)
+	if err != nil {
+		log.Fatalf("nats connect: %v", err)
+	}
+	//defer nc.Drain()
+	log.Println("connected to", natsURL)
 
-    srv := &http.Server{
-        Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
-        Handler: r,
-    }
+	runHealth(nc, cfg.CO.URL, cfg.Server.Site, db)
 
-    // ------------------------------------------------------------
-    // 4️⃣ Start orchestrator and HTTP server
-    // ------------------------------------------------------------
-    go lo.StartModeLoop(ctx)
+	log.Println("🚀 Starting adaptive mode manager...")
 
-    go func() {
-        logger.Info("🌐 HTTP server started on :9102 (Gin)")
-        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            logger.Fatal("HTTP server crashed", zap.Error(err))
-        }
-    }()
+	// ------------------------------------------------------------
+	// 2️⃣ Setup orchestrator + FSM loader
+	// ------------------------------------------------------------
+	lo := orchestrator.New(ctx, cfg, db, nc, logger)
+	loader := fsmloader.NewLoader(ctx, logger, lo)
+	lo.FSM = loader.FSM // ensure both share same FSM instance
 
-    // ------------------------------------------------------------
-    // 5️⃣ Handle shutdown signals
-    // ------------------------------------------------------------
-    stop := make(chan os.Signal, 1)
-    signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	// ------------------------------------------------------------
+	// 3️⃣ Setup Gin router
+	// ------------------------------------------------------------
+	r := gin.Default()
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
-    <-stop
-    log.Println("🛑 Shutdown signal received...")
-    cancel() // broadcast cancel to all goroutines
+	r.POST("/register", lo.RegisterRequest)
+	r.POST("/deployment_status", lo.DeployStatus)
 
-    // ------------------------------------------------------------
-    // 6️⃣ Gracefully stop HTTP server
-    // ------------------------------------------------------------
-    shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer shutdownCancel()
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
+		Handler: r,
+	}
 
-    if err := srv.Shutdown(shutdownCtx); err != nil {
-        logger.Error("HTTP server forced to shutdown", zap.Error(err))
-    } else {
-        logger.Info("HTTP server shutdown gracefully")
-    }
+	// ------------------------------------------------------------
+	// 4️⃣ Start orchestrator and HTTP server
+	// ------------------------------------------------------------
+	//go lo.StartModeLoop(ctx)
+	go lo.StartNetworkMonitor(ctx)
 
-    // ------------------------------------------------------------
-    // 7️⃣ Final cleanup
-    // ------------------------------------------------------------
-    time.Sleep(500 * time.Millisecond)
-    logger.Info("🧹 All systems stopped. Goodbye!")
+	go func() {
+		logger.Info("🌐 HTTP server started on :9102 (Gin)")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("HTTP server crashed", zap.Error(err))
+		}
+	}()
+
+	// ------------------------------------------------------------
+	// 5️⃣ Handle shutdown signals
+	// ------------------------------------------------------------
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	<-stop
+	log.Println("🛑 Shutdown signal received...")
+	cancel() // broadcast cancel to all goroutines
+
+	// ------------------------------------------------------------
+	// 6️⃣ Gracefully stop HTTP server
+	// ------------------------------------------------------------
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("HTTP server forced to shutdown", zap.Error(err))
+	} else {
+		logger.Info("HTTP server shutdown gracefully")
+	}
+
+	// ------------------------------------------------------------
+	// 7️⃣ Final cleanup
+	// ------------------------------------------------------------
+	time.Sleep(500 * time.Millisecond)
+	logger.Info("🧹 All systems stopped. Goodbye!")
 }
