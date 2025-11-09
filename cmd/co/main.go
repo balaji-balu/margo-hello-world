@@ -19,6 +19,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // enables the 'postgres' driver
 	"google.golang.org/grpc"
+	"go.uber.org/zap"
 
 	// telemetry
 	"go.opentelemetry.io/otel"
@@ -58,10 +59,25 @@ func main() {
 	ctx := context.Background()
 	shutdown := InitTelemetry(ctx, "orchestrator")
 	defer shutdown(ctx)
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err) // Handle any potential error
+	}
 
-	//config := flag.String("config", "", "config file")
-	//node := flag.String("node", "", "node name")
+	// Print the current working directory
+	fmt.Println("Current working directory:", dir)
 
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Contents of the current directory:")
+	for _, entry := range entries {
+		// entry.Name() gets the name of the file or directory
+		// entry.IsDir() returns true if it is a directory
+		fmt.Printf("- %s (Directory: %t)\n", entry.Name(), entry.IsDir())
+	}
 	configPath := flag.String("config", "./configs/co.yaml", "path to config file")
 	flag.Parse()
 
@@ -73,6 +89,19 @@ func main() {
 	log.Printf("✅ Loaded config: site=%s, port=%d, CO URL=%s",
 		cfg.Server.Site, cfg.Server.Port, cfg.CO.URL)
 
+    // Use NewProduction() for JSON, performance, and sampled logging
+    logger, err := zap.NewProduction()
+    if err != nil {
+        // If Zap fails, fall back to standard log or panic
+        log.Fatalf("can't initialize zap logger: %v", err)
+    }
+    defer logger.Sync() // Ensure all buffered logs are written
+
+	// Inside main()
+	// Redirect all calls from the standard library's 'log' package to Zap.
+	// This is the single most important step for converting existing logs immediately.
+	zap.RedirectStdLog(logger)
+
 	grpcPort := flag.String("grpc", ":50051", "CO gRPC listen address")
 	//httpPort := flag.String("http", ":8080", "CO HTTP listen address")
 	//loAddr := flag.String("lo", "localhost:50052", "Local Orchestrator address")
@@ -80,7 +109,7 @@ func main() {
 
 	//log.Println("config:", *config, "node:", node)
 
-	dsn := os.Getenv("DATABASE_URL")
+	//dsn := os.Getenv("DATABASE_URL")
 	// if dsn == "" {
 	//     dsn = "postgres://postgres:postgres@localhost:5432/orchestration?sslmode=disable"
 	// }
@@ -94,12 +123,26 @@ func main() {
 	// _ = machine.Event(ctx, "send_request", )
 	// _ = machine.Event(ctx, "complete")
 	// _ = machine.Event(ctx, "reset")
+	dsn := os.Getenv("DATABASE_URL")
+	fmt.Println("[CO] connecting to postgres at", dsn)
 
-	fmt.Println("[CO] connecting to postgres at ", dsn)
-	drv, err := sql.Open(dialect.Postgres, dsn)
-	if err != nil {
-		log.Fatalf("failed connecting to postgres: %v", err)
+	var drv *sql.Driver
+	var err1 error
+	for i := 1; i <= 10; i++ {
+		drv, err1 = sql.Open(dialect.Postgres, dsn)
+		if err1 == nil {
+			if err1 = drv.DB().Ping(); err1 == nil {
+				fmt.Println("✅ Connected to Postgres")
+				break
+			}
+		}
+		fmt.Printf("⏳ Waiting for Postgres (attempt %d)...\n", i)
+		time.Sleep(3 * time.Second)
 	}
+	if err1 != nil {
+		log.Fatalf("❌ Failed to connect to Postgres after retries: %v", err)
+	}
+
 	client := ent.NewClient(ent.Driver(drv))
 	defer client.Close()
 

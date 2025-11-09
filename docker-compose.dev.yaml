@@ -1,79 +1,27 @@
 version: "3.9"
 
 services:
-  co:
-    build:
-      context: .
-      dockerfile: ./dockerfile.co
-    container_name: co
+  postgres:
+    image: docker.io/library/postgres:15.3
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orchestration
     ports:
-      - "9000:9000"
+      - "5432:5432"
     volumes:
-      - ./configs/co.yaml:/app/config.yaml
-    command: ["--config", "/app/config.yaml"]
-    networks:
-      - orchestrator-net
+      - pgdata:/var/lib/postgresql/data
 
-  lo1:
-    build:
-      context: .
-      dockerfile: ./dockerfile.lo
-    container_name: lo1
+  nats:
+    image: docker.io/library/nats:latest
     ports:
-      - "9101:9101"
-    volumes:
-      - ./configs/lo1.yaml:/app/config.yaml
-    depends_on:
-      - co
-    command: ["--config", "/app/config.yaml"]
-    networks:
-      - orchestrator-net
+      - "4222:4222" # Client port
+      - "8222:8222" # Monitoring port (optional)
 
-  # lo2:
-  #   build:
-  #     context: .
-  #     dockerfile: ./dockerfile.lo
-  #   container_name: lo2
-  #   ports:
-  #     - "9102:9102"
-  #   volumes:
-  #     - ./configs/lo2.yaml:/app/config.yaml
-  #   depends_on:
-  #     - co
-  #   command: ["--config", "/app/config.yaml"]
-  #   networks:
-  #     - orchestrator-net
+# networks:
+#   orchestrator-net:
+#     driver: bridge
 
-  edge1:
-    build:
-      context: .
-      dockerfile: ./dockerfile.edge
-    container_name: edge1
-    ports:
-      - "9201:9201"
-    volumes:
-      - ./configs/edge1.yaml:/app/config.yaml
-    depends_on:
-      - lo1
-    command: ["--config", "/app/config.yaml"]
-    networks:
-      - orchestrator-net
-
-  # edge2:
-  #   build:
-  #     context: .
-  #     dockerfile: ./dockerfile.edge
-  #   container_name: edge2
-  #   ports:
-  #     - "9202:9202"
-  #   volumes:
-  #     - ./configs/edge2.yaml:/app/config.yaml
-  #   depends_on:
-  #     - lo2
-  #   command: ["--config", "/app/config.yaml"]
-  #   networks:
-  #     - orchestrator-net
-
-networks:
-  orchestrator-net:
-    driver: bridge
+volumes:
+  pgdata:

@@ -5,10 +5,10 @@ server:
   runtime: containerd
   region: india-south-1
 database:
-  url: postgres://postgres:postgres@localhost:5432/orchestration?sslmode=disable 
+  url: postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable 
 mode: pull
 nats:
-  url: nats://localhost:4222
+  url: nats://nats:4222
 poll_interval_seconds: 20
 git:
   repo: https://github.com/edge-orchestration-platform/deployments

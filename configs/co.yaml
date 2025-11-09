@@ -13,6 +13,9 @@ git:
   branch: main
   private: true
   token_env: GITHUB_TOKEN
+appregistry:
+  repo: https://github.com/edge-orchestration-platform/app-registry
+  branch: main
 mode: push
 nats:
   url: nats://localhost:4222

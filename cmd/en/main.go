@@ -216,9 +216,14 @@ func main() {
 	//localOrchestratorURL = cfg.LO.URL
 	en := edgenode.NewEdgeNode(localOrchestratorURL)
 
-	// Initialize logger and context
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync()
+    logger, err := zap.NewProduction()
+    if err != nil {
+        // If Zap fails, fall back to standard log or panic
+        log.Fatalf("can't initialize zap logger: %v", err)
+    }
+    defer logger.Sync() // Ensure all buffered logs are written
+	zap.RedirectStdLog(logger)
+	
 	ctx := context.Background()
 
 	// Initialize FSM for this edge node

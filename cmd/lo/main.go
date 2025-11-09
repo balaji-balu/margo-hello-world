@@ -36,6 +36,8 @@ func init() {
 }
 
 func main() {
+	log.Println("Hello from lo.....")
+
 	// ------------------------------------------------------------
 	// 1️⃣ Context + Logger setup
 	// ------------------------------------------------------------
@@ -50,8 +52,14 @@ func main() {
 		log.Fatalf("❌ error loading config: %v", err)
 	}
 
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
+	log.Println("cfg loaded. init zap")
+    logger, err := zap.NewProduction()
+    if err != nil {
+        // If Zap fails, fall back to standard log or panic
+        log.Fatalf("can't initialize zap logger: %v", err)
+    }
+    defer logger.Sync() // Ensure all buffered logs are written
+	zap.RedirectStdLog(logger)
 
 	// Init DB
 	dbPath := "./data/lo/nodes.db"
@@ -61,6 +69,7 @@ func main() {
 	db := orchestrator.InitDB(dbPath)
 	defer db.Close()
 
+	log.Println("boltz db inited")
 	//reset all existing as not alive
 	//TBD: also do reset once the node health is timeout
 	for _, n := range orchestrator.GetAllNodes(db) {
@@ -94,7 +103,7 @@ func main() {
 	// 3️⃣ Setup Gin router
 	// ------------------------------------------------------------
 	r := gin.Default()
-	r.GET("/health", func(c *gin.Context) {
+	r.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
@@ -113,7 +122,7 @@ func main() {
 	go lo.StartNetworkMonitor(ctx)
 
 	go func() {
-		logger.Info("🌐 HTTP server started on :9102 (Gin)")
+		logger.Info("🌐 HTTP server started on :", zap.Int("Port", cfg.Server.Port))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("HTTP server crashed", zap.Error(err))
 		}

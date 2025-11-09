@@ -22,109 +22,50 @@ services:
     # volumes:
     #   - ./nats-data:/data # Optional: for persistent JetStream data
 
-  # migrate:
-  #   image: docker.io/arigaio/atlas:latest
-  #   container_name: atlas-migrate
-  #   depends_on:
-  #     - postgres
-  #   volumes:
-  #     - ./migrations:/migrations
-  #     - migrate-ready:/ready
-  #   command: >
-  #     migrate apply
-  #     --url postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable
-  #     --dir file://migrations
-  #   restart: "no"
+  co:
+    build:
+      dockerfile: ./dockerfile.co
+    ports:
+      - 9101:9101
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  lo:
+    build:
+      dockerfile: ./dockerfile.lo
+    ports:
+      - 9102:9102
+    depends_on:
+      - postgres
+      - nats
+    environment:
+      # - DATABASE_URL:${DATABASE_URL}
+      BOLT_PATH: /data/nodes.db
+      NATS_URL: nats://nats:4222
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+    volumes:
+      - ./data/lo:/data
+      - ./local-cache:/tmp/repo-cache
 
-  # central-orch:
-  #   build:
-  #     context: ./co
-  #     # dockerfile: ./co/Dockerfile
-  #     additional_contexts:
-  #       parent_ent: ./
-  #       parent_migrations: ./
-  #       parent_pkg: ./
-  #       parent_proto: ./
-  #       parent_test: ./
-  #   container_name: central-orch
-  #   image: orchestration:latest
-  #   environment:
-  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable
-  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-  #     ROLE: central
-  #   command: ["/app/orchestrator"]
-  #   depends_on:
-  #     - postgres
-
-  # central-orch:
-  #   build:
-  #     context: ./central
-  #     dockerfile: Dockerfile
-  #   container_name: central-orch
-  #   depends_on:
-  #     - postgres
-  #     - migrate
-  #   volumes:
-  #     - migrate-ready:/ready
-  #   command: >
-  #     sh -c "until [ -f /ready/migrations_done ]; do
-  #              echo 'central-orch: waiting for migrations...';
-  #              sleep 3;
-  #            done;
-  #            echo 'Starting central orchestrator...';
-  #            /app/service"
-  #   environment:
-  #     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable"
-  #     ROLE: "central"
-  #   ports:
-  #     - "8080:8080"
-
-  # local-orch:
-  #   build:
-  #     context: ./local
-  #     dockerfile: Dockerfile
-  #   container_name: local-orch
-  #   depends_on:
-  #     - postgres
-  #     - migrate
-  #   volumes:
-  #     - migrate-ready:/ready
-  #   command: >
-  #     sh -c "until [ -f /ready/migrations_done ]; do
-  #              echo 'local-orch: waiting for migrations...';
-  #              sleep 3;
-  #            done;
-  #            echo 'Starting local orchestrator...';
-  #            /app/service"
-  #   environment:
-  #     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable"
-  #     ROLE: "local"
-  #   ports:
-  #     - "8081:8080"
-
-  # edge-agent:
-  #   build:
-  #     context: ./edge
-  #     dockerfile: Dockerfile
-  #   container_name: edge-agent
-  #   depends_on:
-  #     - postgres
-  #     - migrate
-  #   volumes:
-  #     - migrate-ready:/ready
-  #   command: >
-  #     sh -c "until [ -f /ready/migrations_done ]; do
-  #              echo 'edge-agent: waiting for migrations...';
-  #              sleep 3;
-  #            done;
-  #            echo 'Starting edge node...';
-  #            /app/service"
-  #   environment:
-  #     DATABASE_URL: "postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable"
-  #     ROLE: "edge"
-  #   ports:
-  #     - "8082:8080"
+  en:
+    build:
+      dockerfile: ./dockerfile.en
+    ports:
+      - 9201:9201
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+      - GITHUB_TOKEN:${GITHUB_TOKEN}
+    volumes:
+      - ./local-cache:/local-cache
 
 volumes:
   pgdata:
-  migrate-ready:

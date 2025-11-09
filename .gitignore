@@ -2,5 +2,7 @@ journal.json
 proto_generated
 logs
 local-cache
+cache
 bin
 .env
+.env.staging

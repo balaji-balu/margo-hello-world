@@ -22,6 +22,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
+	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
@@ -53,8 +54,10 @@ type HostMapping struct {
 
 type App struct {
 	AppID     string        `json:"app_id"`
-	ProfileID string        `json:"profile_id"`
+	AppName   string 		`json:"app_name"`
+	//ProfileID string        `json:"profile_id"`
 	Sites     []HostMapping `json:"sites"`
+	DeployType string 		`json:"deploy_type"`
 }
 
 func init() {
@@ -278,41 +281,69 @@ func PushDeploymentYAML(ctx context.Context,
 }
 
 func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
-
 	log.Println("CreateDeployment called. Site:", cfg.Server.Site)
-	log.Println("CreateDeployment called repourl", cfg.Git.Repo)
-	//log.Println("CreateDeployment called", cfg.Git.Branch)
-	//log.Println("CreateDeployment called", cfg.Git.Interval)
+	log.Println("Repo URL:", cfg.Git.Repo)
 
 	var app App
 	if err := c.ShouldBindJSON(&app); err != nil {
-		log.Printf("Error binding JSON: %v", err)
+		log.Printf("❌ Error binding JSON: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	//appID := c.Param("id")
-	log.Println("app:", app)
-	log.Printf("appID:", app.AppID)
+	log.Printf("🌀 Incoming app: %+v\n", app)
 
 	ctx := context.Background()
-	appDesc, err := client.ApplicationDesc.Get(ctx, app.AppID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "application not found"})
+
+	// --- 1️⃣ Check if the app exists by ID or name ---
+	q := client.ApplicationDesc.Query()
+
+	// Build a conditional filter
+	if app.AppID != "" {
+		log.Println("searching id....", app.AppID)
+		q = q.Where(applicationdesc.IDEQ(app.AppID))
+	} else if app.AppName != "" {
+		log.Println("searching name....", app.AppName)
+		q = q.Where(applicationdesc.NameEQ(app.AppName))
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "app_id or app name must be provided"})
 		return
 	}
-	log.Println("appdesc:", appDesc)
+
+	existingApps, err := q.All(ctx)
+	if err != nil {
+		log.Printf("❌ DB query failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// --- 2️⃣ Validate uniqueness ---
+	if len(existingApps) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no matching app found in registry"})
+		return
+	}
+	if len(existingApps) > 1 {
+		c.JSON(http.StatusConflict, gin.H{"error": "multiple apps matched — ambiguous identifier"})
+		return
+	}
+
+	appDesc := existingApps[0]
+	log.Printf("✅ Found app match: %s (id=%s)\n", appDesc.Name, appDesc.ID)
+
+
 	profile, err := client.DeploymentProfile.
 		Query().
-		Where(deploymentprofile.AppIDEQ(app.AppID)).
+		Where(
+			deploymentprofile.AppIDEQ(appDesc.ID),
+			deploymentprofile.TypeEQ(app.DeployType),
+		).
 		Only(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "deployment profile not found"})
 		return
 	}
-	log.Println("profile:", profile)
+	log.Println("🔹 Processing deployment profile ID:", profile.ID)
 
-	log.Println("profile id", profile.ID)
 	components, err := client.Component.
 		Query().
 		Where(component.DeploymentProfileIDEQ(profile.ID)).
@@ -350,33 +381,13 @@ func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
 		log.Fatal(err)
 	}
 
-	// sm.Broadcast(appdply.Metadata.Name, streammanager.DeployEvent{
-	//     DeploymentId: appdply.Metadata.Name,
-	//     Timestamp: time.Now().Format(time.RFC3339),
-	//     SiteID:    "",
-	//     Message:   "deployment started",
-	//     Status:    "pending",
-	// })
-	//c.JSON(http.StatusOK, appdply.Metadata.Name)
+	log.Printf("✅ Successfully pushed deployment YAML for profile %s", profile.ID)
+
 	c.JSON(http.StatusOK, gin.H{
-		"deployment_id": deploymentID,
-		"status":        "started",
-	})
+			"deployment_id": deploymentID,
+			"status":        "started",
+	})	
 	return
-
-	// var ad application.ApplicationDescription
-
-	// if err := c.ShouldBindJSON(&ad); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// ctx := context.Background()
-	// if err := Persist(ctx, client, &ad); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
 }
 
 func GetDeploymentStatus(c *gin.Context, client *ent.Client) {

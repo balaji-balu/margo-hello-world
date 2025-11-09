@@ -33,6 +33,10 @@ type Config struct {
 		Owner  string `yaml:"owner"`
 		Branch string `yaml:"branch"`
 	}
+	Appregistry struct {
+		Repo string `yaml:"repo"`
+		Branch string `yaml:"branch"`
+	}
 }
 
 func LoadConfig(path string) (*Config, error) {

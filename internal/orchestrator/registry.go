@@ -24,8 +24,10 @@ type EdgeNode struct {
 }
 
 func InitDB(path string) *bolt.DB {
+	log.Println("InitDB called with path:", path)
 	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
+		log.Println("bolt open failed", err)
 		log.Fatal("BoltDB open:", err)
 	}
 	db.Update(func(tx *bolt.Tx) error {
@@ -36,6 +38,7 @@ func InitDB(path string) *bolt.DB {
 		_, err = tx.CreateBucketIfNotExists([]byte(deploymentsBucket))
 		return err
 	})
+	log.Println("Returning")
 	return db
 }
 

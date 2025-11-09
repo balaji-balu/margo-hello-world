@@ -15,6 +15,7 @@ require (
 	github.com/looplab/fsm v1.0.3
 	github.com/nats-io/nats.go v1.47.0
 	github.com/prometheus/client_golang v1.19.1
+	github.com/stretchr/testify v1.11.1
 	go.etcd.io/bbolt v1.4.3
 	go.opentelemetry.io/contrib/bridges/otellogrus v0.13.0
 	go.opentelemetry.io/otel v1.38.0
@@ -45,6 +46,7 @@ require (
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
@@ -78,6 +80,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect

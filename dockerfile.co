@@ -1,9 +1,23 @@
 FROM docker.io/library/golang:1.25 AS builder
 WORKDIR /app
+
+# Copy only go.mod and go.sum first (to leverage Docker layer caching)
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
-RUN go build -o co ./cmd/co
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o co ./cmd/co
+# RUN go build -o co ./cmd/co
 
 FROM docker.io/debian:bookworm-slim
 WORKDIR /app
+
+# ✅ Correct package manager for Debian
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/co .
-ENTRYPOINT ["/app/co"]
+COPY ./configs/co.yaml ./configs/co.yaml
+#ENTRYPOINT ["/app/co"]
+
+CMD ["./co", "--config=./configs/co.yaml"]
