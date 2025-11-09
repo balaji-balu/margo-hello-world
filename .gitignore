@@ -6,3 +6,4 @@ cache
 bin
 .env
 .env.staging
+data
