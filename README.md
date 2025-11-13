@@ -1,121 +1,188 @@
+## Key Features
 
-podman-compose -f docker-compose.2lo-4en.yaml --env-file .env.staging up --scale en=2 -d --build
+- **Security-First Architecture** – Enterprise-grade protection for all edge deployments.  
+- **Deploy AI Workloads at the Edge & IoT Devices** – Run applications closer to the data for faster insights.
+- **Intelligent Edge Node Selection** – Automatically pick the best devices for deployment.
+- **Offline-First Support** – Works smoothly even with intermittent or unreliable network connections.
+- **App & Device Stores** –
+    - App developers can register applications in the App Store.
+    - Device developers can register edge devices in the Device Store.
+- **Customer Access via CLI and Web Portal** – Manage and monitor deployments through command-line tools or a web interface.
+- **Remote Workloads Lifecycle Management** – Add, update, and remove workloads on edge devices remotely. Air-gap environment supported
+- **Interoperable Runtime Support** – Works with different runtime environments, including WASM/Ocre, container-based, and Kubernetes-based runtimes. Supports a range of devices from **small microcontrollers (MCP)** to **more powerful microprocessors (MPC)**.
+- **Industry Focus** – Designed for industrial settings, manufacturing shop floors, and retail environments.
 
+### Architecture
 
-field.JSON("tags", []string{}).Optional(),
+Three-tier orchestration system:
+- CO – Central Orchestrator  
+- LO – Local Orchestrator (per site)  
+- EN – Edge Node (per host)  
+Users interact via Web Portal or CLI through CO API.
 
-site.f95d34b2-8019-4590-a3ff-ff1e15ecc5d5.deploy.edge1-containerd
-f95d34b2-8019-4590-a3ff-ff1e15ecc5d5 edge1-containerd containerd india-south-1 9201}
-
-at root directory
- ent generate ./ent/schema`
- 
- atlas migrate diff   --dev-url "docker://postgres/16/test?search_path=public"   --to "ent://ent/schema"   --dir "file://migrations"
- 
- atlas migrate apply --url "postgres://postgres:postgres@localhost:5432/orchestration?sslmode=disable" --dir "file://migrations"``
-
-// reset db
-atlas schema clean --url "postgres://postgres:postgres@localhost:5432/orchestration?sslmode=disable"
-atlas migrate diff initial \
-  --to "ent://ent/schema" \
-  --dev-url "docker://postgres/16/test?search_path=public"
-
-
-//pg dump
-sudo apt install postgresql-client
-
-pg_dump -h localhost -d orchestration -U postgres -s -F p -E UTF-8 -f ./output.txt
-
-
-cd /path
-protoc --go_out=. --go-grpc_out=. proto/*.proto
-
-another terminal
-cd co
-go run main.c
-
-another terminal
-cd lo
-go run main.c
-
-another terminal
-cd en
-go run main.c
-
-test/1.http
-
-POST http://localhost:8080/deploy?file=fleet.yaml
 ```
-open another terminal 
+            +----------------------+
+            | Web Portal / CLI     |
+            +----------+-----------+
+                       |
+                       v
+            +----------------------+
+            | Central Orchestrator |
+            |  (CO)                |
+            +----------+-----------+
+                       | Margo API
+    -------------------------------------------------
+    |                    |                         |
++----------------+   +----------------+     +----------------+
+| Local Orchestr.|   | Local Orchestr.|     | Local Orchestr.|
+|   (LO - Site A)|   |   (LO - Site B)| ... |   (LO - Site N)|
++--------+-------+   +--------+-------+     +--------+-------+
+         |                  |                        |
+   Overlay or Local Net  Overlay or Local Net  Overlay or Local Net
+         |                  |                        |
+   +-----------+       +-----------+           +-----------+
+   | Host1     |       | Host4     |           | Host7     |
+   | (EN1)     |       | (EN4)     |           | (EN7)     |
+   | K8s/OCI/WASM|     | K8s/OCI/WASM|         | K8s/OCI/WASM|
+   +-----------+       +-----------+           +-----------+
+   | Host2     |       | Host5     |           | Host8     |
+   | (EN2)     |       | (EN5)     |           | (EN8)     |
+   | K8s/OCI/WASM|     | K8s/OCI/WASM|         | K8s/OCI/WASM|
+   +-----------+       +-----------+           +-----------+
+   | Host3     |       | Host6     |           | Host9     |
+   | (EN3)     |       | (EN6)     |           | (EN9)     |
+   | K8s/OCI/WASM|     | K8s/OCI/WASM|         | K8s/OCI/WASM|
+   +-----------+       +-----------+           +-----------+
+```        
 
-```bash
-docker run -d --name otel-collector   -p 4317:4317   -p 4318:4318   -v $(pwd)/collector-config.yaml:/etc/otel/config.yaml   docker.io/otel/opentelemetry-collector-contrib:0.137.0
+- **ENs (Edge Nodes)** now explicitly show that each node can run workloads in multiple runtimes:
+    - **K8s** – Kubernetes orchestrated containers.
+    - **OCI / containerd** – Standard OCI containers.
+    - **WASM** – Lightweight WebAssembly workloads.
+- Each **LO** manages a **site** (e.g., factory floor, retail store) and connects to its **ENs** via overlay or local network.
+- CO (Central Orchestrator) remains the control plane, accessible through **Web Portal / CLI**, using **Margo API**.
+
+### Components
+
+- **CO (Central Orchestrator):** API server that manages profile selection, app registry, deployment registry, and git push operations. Handles all communications with Local Orchestrators (LO) and Edge Nodes (EN). Implements the server side of the API and provides access to both the CLI and the Web Portal. Supports GitOps workflows. 
+- **LO (Local Orchestrator):** Observes git repositories (pull-based) and pushes changes to Edge Nodes. Deploys workloads to multiple edges in parallel. Adaptive to intermittent network conditions - changes to Git pull, push or NATS based event driven communication with CO
+- **EN (Edge Node):** Agent implementing the client side of the API. Responsible for fetching OCI artifacts, supporting Helm-based deployments on Kubernetes, container-based runtimes, and WASM-based workloads.
+- **Deployment Status & Node Capabilities:** Tracks deployment states and capabilities of each edge device.
+- **edgectl:** CLI tool to access the CO API.
+- **Web Portal:** Provides a graphical interface for managing deployments, apps, and devices.
+
+### Data modeling
+[Margo](margo.org) specification defined these data models
+- *[application description](https://specification.margo.org/specification/application-package/application-description/):* defines the app specification, artifacts location, application resources requirements. 
+- *[application deployment](https://specification.margo.org/specification/margo-management-interface/desired-state/)*: used for deploying workloads
+- *[deployment status](https://specification.margo.org/specification/margo-management-interface/deployment-status/):* used for communicating the workload deployment status
+- *[device capabilities](https://specification.margo.org/specification/margo-management-interface/device-capabilities/)*: edge node capabilities like cpu, memory, gpu etc
+- *sites, hosts, orchestrator, tenants*
+### Folders structure
+cmd
+- cmd
+	- co
+	- lo
+	- en
+- ent                                <-- persistable data models
+	- schema                    <-- this is where you create data model
+	- migrate/migrations <-- atlas based migrations
+- internal
+	- orchestrator
+	- gitobserver
+	- gitfetcher
+	- ocifetch
+	- api
+	- edgenodes 
+- pkg
+	- model
+- atlas.hcl                          <--- db migration configuration
+- docker-compose.yaml   <--- spins nats, postgres, co, lo, en containers
+- dockerfile.co                  <--- co container
+- dockerfile.lo                   <--- lo container
+- dockerfile.en                  <--- en container 
+- go.mod                           
+
+
+edgectl
+
+web portal
+
+### Tech stack
+co, lo, en:
+- messaging: NATS
+- db: ent, atlas, postgres, boltz db
+- go-git (neutralized git access)
+- golang
+- 
+- logger: zap 
+
+web portal: 
+- next.js, shadcn, tailwind.css 
+
+cli: 
+- cobra
+## Getting started
+
+1. start the docker compose and verify the containers are properly created: 
+```
+podman-compose --env-file .env.staging up -d
+
+docker ps
 ```
 
-   ./co -f examples/fleet.yaml -lo localhost:50052
-   ./lo -port :50052 -co localhost:50051
-   ./en -port :50054 -id edge1 -lo localhost:50052
-   ./en -port :50055 -id edge2 -lo localhost:50052
+2. Open web portal
+```
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1. Edge Node: listens on port 60052
+3. open CLI
+go to edgectl directory
+```
+go run main.go co status
+```
+4. Add the sample app to app store
+```
+$ go run main.go co add app --name "com-northstartida-digitron-orchestrator" --artifact https://github.com/edge-orchestration-platform/app-registry
+Adding new application ...
+✅ Application added successfully!
 
-= Reads the deployment instructions from LO .
-- Starts containers locally (like the Python/Go example we wrote).
-- Sends status (success/failure) back to LO .
+$ go run main.go co list apps
+Listing apps ...
+✅ Available applications:
+ 1. Digitron orchestrator 1.2.1      http://www.northstar-ida.com com-northstartida-digitron-orchestrator
+```
+4. deploy sample app
+```
+go run main.go co deploy 
+```
+## Code 
+```
+go run ./cmd/co --config=./configs/co.yml
+go run ./cmd/lo 
+go run ./cmd/en
+```
 
-2. Local Orchestrator (LO): listens on port 60051
+##### configuration
+GITHUB_TOKEN=
+DATABASE_URL=
+SITE_ID  = 
+NODE_ID  =
+RUNTIME = containerd(default), wasm, compose_pkg, helm
+DEPLOYMENTS_REPO = https://github.com/edge-orchestration-platform/deployments (this is where co writes deployment requests. lo will monitor for this repo changes for its site)
+APPLICATIONS_REPO = https://github.com/edge-orchestration-platform/app-registry (this is for testing. actual repo will be on developers site)
+AI_SAMPLE_DEMO = ghcr.io/edge-orchestration-platform/edge-ai-sample(sample edge ai)
 
-- Receives deployment instructions from CO .
-- Forwards them to the correct edge node(s) to EN.
-- Collects deployment status from edge nodes.
-- Forwards status back to CO.
+##### Data Models addition/modifications
 
-3. Central Orchestrator (CO): listens on port 50051
+go to root directory
+add schema files to `ent/schema` and then 
 
-- Sends deployment instructions to LO .
-- Receives final status from LO .
+```
+ent generate ./ent/schema  --feature sql/upsert
+atlas migrate diff add_deloymentstatus --env local --to "ent://ent/schema"
+atlas migrate apply --env local
+```
 
-### Todo:
-- postgres
-
-
-**Now we have:**
-- Traces: EN container executions, LO orchestration, CO orchestration decisions
-- Metrics: Deployment counts, node status
-- Full observability: CO can see EN activity in near real-time
-= Central Orchestrator (CO) → sends fleet manifest
-- Local Orchestrator (LO) → parses manifest → deploys only its node’s containers
-- Edge Node (EN) → runs multiple containers on request
-- Scalable to N nodes, M services per node
-- Manifest-driven, so changes automatically propagate
-
-### Testing the Observability Flow
-
-- Run OTEL Collector
-- Start EN → LO → CO
-- Observe logs in OTEL Collector for:
-- Traces for each container run
-- Metrics counters for successful deployments
-
-
-Reference:
-- chatgpt "Hello world prototype" https://chatgpt.com/c/68f57881-0720-8321-a714-eef84194b083
-
-
-- zap() for logging
-- offline first
-- hierarchical FSM(finite state machine) using loopfsm
-- Github access ( or gitlab or bitbucket )
-- otel for observability
-- webportal and cli 
-- co, lo, en (draw the digram)
-- atlas and ent and postgres
-
-
-get started :
-
-1. start postgres, nats containers
-at the root directory, run 
-$ podman-compose up -d
-2. execute postgres psql 
-$ docker exec -it postgres psql -U postgres -d orchestration
+uses atlas.hcl at the root directory

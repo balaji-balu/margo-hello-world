@@ -7,3 +7,4 @@ bin
 .env
 .env.staging
 data/lo/*.db
+README.md.bkup
