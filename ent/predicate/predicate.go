@@ -12,8 +12,14 @@ type ApplicationDesc func(*sql.Selector)
 // Component is the predicate function for component builders.
 type Component func(*sql.Selector)
 
+// DeploymentComponentStatus is the predicate function for deploymentcomponentstatus builders.
+type DeploymentComponentStatus func(*sql.Selector)
+
 // DeploymentProfile is the predicate function for deploymentprofile builders.
 type DeploymentProfile func(*sql.Selector)
+
+// DeploymentStatus is the predicate function for deploymentstatus builders.
+type DeploymentStatus func(*sql.Selector)
 
 // Host is the predicate function for host builders.
 type Host func(*sql.Selector)

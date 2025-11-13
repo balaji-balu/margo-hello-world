@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/balaji-balu/margo-hello-world/internal/edgenode"
-	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
+	//"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 )
 
 type EdgeNodeFSM struct {
@@ -39,19 +39,19 @@ func NewEdgeNodeFSM(ctx context.Context,
 		},
 		fsm.Callbacks{
 			"enter_deploying": func(ctx context.Context, evt *fsm.Event) {
-				en.ReportStatus("app", deployment.StatusRunning, "Deployment started",
-					evt.Dst)
+				// en.ReportStatus("app", deployment.StatusRunning, "Deployment started",
+				// 	evt.Dst)
 				enfsm.logger.Info("Deployment started", zap.String("state", evt.Dst))
 			},
 			"enter_completed": func(ctx context.Context, evt *fsm.Event) {
-				en.ReportStatus("app", deployment.StatusSuccess,
-					"Deployment completed successfully",
-					evt.Dst)
+				// en.ReportStatus("app", deployment.StatusSuccess,
+				// 	"Deployment completed successfully",
+				// 	evt.Dst)
 				enfsm.logger.Info("Deployment successful", zap.String("state", evt.Dst))
 			},
 			"enter_failed": func(ctx context.Context, evt *fsm.Event) {
-				en.ReportStatus("app", deployment.StatusFailed, "Deployment failed",
-					evt.Dst)
+				// en.ReportStatus("app", deployment.StatusFailed, "Deployment failed",
+				// 	evt.Dst)
 				enfsm.logger.Warn("Deployment failed", zap.String("state", evt.Dst))
 			},
 			// "enter_node_deploying": func(ctx context.Context, e2 *fsm.Event) {

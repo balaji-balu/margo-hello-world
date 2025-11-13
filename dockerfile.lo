@@ -15,6 +15,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     rm -rf /var/lib/apt/lists/*
     
 COPY --from=builder /app/lo .
-COPY ./configs/lo_tiruvannamalai.yaml ./configs/lo_tiruvannamalai.yaml
+CMD ["./lo"]
+
+# COPY ./configs/lo_tiruvannamalai.yaml ./configs/lo_tiruvannamalai.yaml
 # ENTRYPOINT ["/app/lo"]
-CMD ["./lo", "--config=./configs/lo_tiruvannamalai.yaml"]
+# CMD ["./lo", "--config=./configs/lo_tiruvannamalai.yaml"]
+
+# COPY ./entrypoint.lo.sh /app/entrypoint.lo.sh
+
+# RUN chmod +x /app/entrypoint.lo.sh
+# ENTRYPOINT ["/app/entrypoint.lo.sh"]

@@ -1,8 +1,8 @@
-server:
-  port: 9102
-  site: f95d34b2-8019-4590-a3ff-ff1e15ecc5d5
-database:
-  url: postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable 
+# server:
+#   port: 9102
+#   site: f95d34b2-8019-4590-a3ff-ff1e15ecc5d5
+# database:
+#   url: postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable 
 mode: pull
 nats:
   url: nats://nats:4222

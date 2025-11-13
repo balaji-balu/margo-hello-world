@@ -51,6 +51,31 @@ var (
 			},
 		},
 	}
+	// DeploymentComponentStatusColumns holds the columns for the "deployment_component_status" table.
+	DeploymentComponentStatusColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+		{Name: "state", Type: field.TypeString, Default: "pending"},
+		{Name: "error_code", Type: field.TypeString, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deployment_status_components", Type: field.TypeUUID},
+	}
+	// DeploymentComponentStatusTable holds the schema information for the "deployment_component_status" table.
+	DeploymentComponentStatusTable = &schema.Table{
+		Name:       "deployment_component_status",
+		Columns:    DeploymentComponentStatusColumns,
+		PrimaryKey: []*schema.Column{DeploymentComponentStatusColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "deployment_component_status_deployment_status_components",
+				Columns:    []*schema.Column{DeploymentComponentStatusColumns[7]},
+				RefColumns: []*schema.Column{DeploymentStatusColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// DeploymentProfileColumns holds the columns for the "deployment_profile" table.
 	DeploymentProfileColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -78,15 +103,32 @@ var (
 			},
 		},
 	}
+	// DeploymentStatusColumns holds the columns for the "deployment_status" table.
+	DeploymentStatusColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "state", Type: field.TypeString, Default: "pending"},
+		{Name: "error_code", Type: field.TypeString, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// DeploymentStatusTable holds the schema information for the "deployment_status" table.
+	DeploymentStatusTable = &schema.Table{
+		Name:       "deployment_status",
+		Columns:    DeploymentStatusColumns,
+		PrimaryKey: []*schema.Column{DeploymentStatusColumns[0]},
+	}
 	// HostColumns holds the columns for the "host" table.
 	HostColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "host_id", Type: field.TypeString, Unique: true},
+		{Name: "runtime", Type: field.TypeString, Nullable: true},
+		{Name: "last_heartbeat", Type: field.TypeTime, Nullable: true},
+		{Name: "cpu_free", Type: field.TypeFloat64, Nullable: true},
+		{Name: "status", Type: field.TypeString, Nullable: true},
 		{Name: "hostname", Type: field.TypeString, Nullable: true},
 		{Name: "ip_address", Type: field.TypeString, Nullable: true},
 		{Name: "edge_url", Type: field.TypeString, Nullable: true},
-		{Name: "status", Type: field.TypeString, Nullable: true},
-		{Name: "last_heartbeat", Type: field.TypeTime, Nullable: true},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
@@ -100,7 +142,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "host_site_hosts",
-				Columns:    []*schema.Column{HostColumns[10]},
+				Columns:    []*schema.Column{HostColumns[12]},
 				RefColumns: []*schema.Column{SiteColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -162,7 +204,9 @@ var (
 	Tables = []*schema.Table{
 		ApplicationDescTable,
 		ComponentTable,
+		DeploymentComponentStatusTable,
 		DeploymentProfileTable,
+		DeploymentStatusTable,
 		HostTable,
 		OrchestratorTable,
 		SiteTable,
@@ -178,6 +222,7 @@ func init() {
 	ComponentTable.Annotation = &entsql.Annotation{
 		Table: "component",
 	}
+	DeploymentComponentStatusTable.ForeignKeys[0].RefTable = DeploymentStatusTable
 	DeploymentProfileTable.ForeignKeys[0].RefTable = ApplicationDescTable
 	DeploymentProfileTable.Annotation = &entsql.Annotation{
 		Table: "deployment_profile",

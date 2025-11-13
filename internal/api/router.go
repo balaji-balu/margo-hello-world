@@ -33,14 +33,22 @@ func NewRouter(client *ent.Client, cfg *config.Config) *gin.Engine {
 
 	api := r.Group("/api/v1")
 	{
-		api.POST("/deployments/:id/status", func(c *gin.Context) { handlers.DeploymentStatusHandler(c, sm) })
+		api.POST("/deployments/:id/status", func(c *gin.Context) { 
+			handlers.DeploymentStatusHandler(c, client, sm) })
 		api.GET("/healthz", handlers.HealthzHandler)
 		api.GET("/apps", func(c *gin.Context) { handlers.ListApps(c, client) })
-		api.POST("/apps", func(c *gin.Context) { handlers.CreateApp(c, client, &fetcher) })
+		api.POST("/apps", func(c *gin.Context) { 
+			handlers.CreateApp(c, client, &fetcher) })
 		api.GET("/apps/:id", func(c *gin.Context) { handlers.GetApp(c, client) })
-		api.POST("/deployments", func(c *gin.Context) { handlers.CreateDeployment(c, client, cfg) })
-		api.GET("/deployments/:id/status", func(c *gin.Context) { handlers.GetDeploymentStatus(c, client) })
-		api.GET("/deployments/:id/stream", func(c *gin.Context) { handlers.HandleStreamDeployment(c, sm) })
+		api.POST("/deployments", func(c *gin.Context) { 
+			handlers.CreateDeployment(c, client, cfg) })
+		// api.GET("/deployments", (func(c *gin.Context) {
+		// 	handlers.GetDeloymentsStatus(c, client)
+		// })
+		api.GET("/deployments/:id/status", func(c *gin.Context) { 
+			handlers.GetDeploymentStatus(c, client) })
+		api.GET("/deployments/:id/stream", func(c *gin.Context) { 
+			handlers.HandleStreamDeployment(c, sm) })
 	}
 
 	return r

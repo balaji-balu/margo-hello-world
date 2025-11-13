@@ -4,8 +4,11 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
@@ -17,6 +20,7 @@ type ApplicationDescCreate struct {
 	config
 	mutation *ApplicationDescMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -251,6 +255,7 @@ func (_c *ApplicationDescCreate) createSpec() (*ApplicationDesc, *sqlgraph.Creat
 		_node = &ApplicationDesc{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(applicationdesc.Table, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -318,11 +323,576 @@ func (_c *ApplicationDescCreate) createSpec() (*ApplicationDesc, *sqlgraph.Creat
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.ApplicationDesc.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ApplicationDescUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *ApplicationDescCreate) OnConflict(opts ...sql.ConflictOption) *ApplicationDescUpsertOne {
+	_c.conflict = opts
+	return &ApplicationDescUpsertOne{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.ApplicationDesc.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *ApplicationDescCreate) OnConflictColumns(columns ...string) *ApplicationDescUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &ApplicationDescUpsertOne{
+		create: _c,
+	}
+}
+
+type (
+	// ApplicationDescUpsertOne is the builder for "upsert"-ing
+	//  one ApplicationDesc node.
+	ApplicationDescUpsertOne struct {
+		create *ApplicationDescCreate
+	}
+
+	// ApplicationDescUpsert is the "OnConflict" setter.
+	ApplicationDescUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *ApplicationDescUpsert) SetName(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateName() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldName)
+	return u
+}
+
+// ClearName clears the value of the "name" field.
+func (u *ApplicationDescUpsert) ClearName() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldName)
+	return u
+}
+
+// SetVendor sets the "vendor" field.
+func (u *ApplicationDescUpsert) SetVendor(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldVendor, v)
+	return u
+}
+
+// UpdateVendor sets the "vendor" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateVendor() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldVendor)
+	return u
+}
+
+// ClearVendor clears the value of the "vendor" field.
+func (u *ApplicationDescUpsert) ClearVendor() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldVendor)
+	return u
+}
+
+// SetVersion sets the "version" field.
+func (u *ApplicationDescUpsert) SetVersion(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldVersion, v)
+	return u
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateVersion() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldVersion)
+	return u
+}
+
+// ClearVersion clears the value of the "version" field.
+func (u *ApplicationDescUpsert) ClearVersion() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldVersion)
+	return u
+}
+
+// SetCategory sets the "category" field.
+func (u *ApplicationDescUpsert) SetCategory(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldCategory, v)
+	return u
+}
+
+// UpdateCategory sets the "category" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateCategory() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldCategory)
+	return u
+}
+
+// ClearCategory clears the value of the "category" field.
+func (u *ApplicationDescUpsert) ClearCategory() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldCategory)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *ApplicationDescUpsert) SetDescription(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateDescription() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldDescription)
+	return u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *ApplicationDescUpsert) ClearDescription() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldDescription)
+	return u
+}
+
+// SetIcon sets the "icon" field.
+func (u *ApplicationDescUpsert) SetIcon(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldIcon, v)
+	return u
+}
+
+// UpdateIcon sets the "icon" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateIcon() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldIcon)
+	return u
+}
+
+// ClearIcon clears the value of the "icon" field.
+func (u *ApplicationDescUpsert) ClearIcon() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldIcon)
+	return u
+}
+
+// SetArtifacturl sets the "artifacturl" field.
+func (u *ApplicationDescUpsert) SetArtifacturl(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldArtifacturl, v)
+	return u
+}
+
+// UpdateArtifacturl sets the "artifacturl" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateArtifacturl() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldArtifacturl)
+	return u
+}
+
+// ClearArtifacturl clears the value of the "artifacturl" field.
+func (u *ApplicationDescUpsert) ClearArtifacturl() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldArtifacturl)
+	return u
+}
+
+// SetSite sets the "site" field.
+func (u *ApplicationDescUpsert) SetSite(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldSite, v)
+	return u
+}
+
+// UpdateSite sets the "site" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateSite() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldSite)
+	return u
+}
+
+// ClearSite clears the value of the "site" field.
+func (u *ApplicationDescUpsert) ClearSite() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldSite)
+	return u
+}
+
+// SetTagLine sets the "tag_line" field.
+func (u *ApplicationDescUpsert) SetTagLine(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldTagLine, v)
+	return u
+}
+
+// UpdateTagLine sets the "tag_line" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateTagLine() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldTagLine)
+	return u
+}
+
+// ClearTagLine clears the value of the "tag_line" field.
+func (u *ApplicationDescUpsert) ClearTagLine() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldTagLine)
+	return u
+}
+
+// SetTags sets the "tags" field.
+func (u *ApplicationDescUpsert) SetTags(v []string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldTags, v)
+	return u
+}
+
+// UpdateTags sets the "tags" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateTags() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldTags)
+	return u
+}
+
+// ClearTags clears the value of the "tags" field.
+func (u *ApplicationDescUpsert) ClearTags() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldTags)
+	return u
+}
+
+// SetPublished sets the "published" field.
+func (u *ApplicationDescUpsert) SetPublished(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldPublished, v)
+	return u
+}
+
+// UpdatePublished sets the "published" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdatePublished() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldPublished)
+	return u
+}
+
+// ClearPublished clears the value of the "published" field.
+func (u *ApplicationDescUpsert) ClearPublished() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldPublished)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.ApplicationDesc.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(applicationdesc.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ApplicationDescUpsertOne) UpdateNewValues() *ApplicationDescUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(applicationdesc.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.ApplicationDesc.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *ApplicationDescUpsertOne) Ignore() *ApplicationDescUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ApplicationDescUpsertOne) DoNothing() *ApplicationDescUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ApplicationDescCreate.OnConflict
+// documentation for more info.
+func (u *ApplicationDescUpsertOne) Update(set func(*ApplicationDescUpsert)) *ApplicationDescUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ApplicationDescUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *ApplicationDescUpsertOne) SetName(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateName() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *ApplicationDescUpsertOne) ClearName() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetVendor sets the "vendor" field.
+func (u *ApplicationDescUpsertOne) SetVendor(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetVendor(v)
+	})
+}
+
+// UpdateVendor sets the "vendor" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateVendor() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateVendor()
+	})
+}
+
+// ClearVendor clears the value of the "vendor" field.
+func (u *ApplicationDescUpsertOne) ClearVendor() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearVendor()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *ApplicationDescUpsertOne) SetVersion(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateVersion() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// ClearVersion clears the value of the "version" field.
+func (u *ApplicationDescUpsertOne) ClearVersion() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearVersion()
+	})
+}
+
+// SetCategory sets the "category" field.
+func (u *ApplicationDescUpsertOne) SetCategory(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetCategory(v)
+	})
+}
+
+// UpdateCategory sets the "category" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateCategory() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateCategory()
+	})
+}
+
+// ClearCategory clears the value of the "category" field.
+func (u *ApplicationDescUpsertOne) ClearCategory() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearCategory()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *ApplicationDescUpsertOne) SetDescription(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateDescription() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *ApplicationDescUpsertOne) ClearDescription() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetIcon sets the "icon" field.
+func (u *ApplicationDescUpsertOne) SetIcon(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetIcon(v)
+	})
+}
+
+// UpdateIcon sets the "icon" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateIcon() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateIcon()
+	})
+}
+
+// ClearIcon clears the value of the "icon" field.
+func (u *ApplicationDescUpsertOne) ClearIcon() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearIcon()
+	})
+}
+
+// SetArtifacturl sets the "artifacturl" field.
+func (u *ApplicationDescUpsertOne) SetArtifacturl(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetArtifacturl(v)
+	})
+}
+
+// UpdateArtifacturl sets the "artifacturl" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateArtifacturl() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateArtifacturl()
+	})
+}
+
+// ClearArtifacturl clears the value of the "artifacturl" field.
+func (u *ApplicationDescUpsertOne) ClearArtifacturl() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearArtifacturl()
+	})
+}
+
+// SetSite sets the "site" field.
+func (u *ApplicationDescUpsertOne) SetSite(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetSite(v)
+	})
+}
+
+// UpdateSite sets the "site" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateSite() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateSite()
+	})
+}
+
+// ClearSite clears the value of the "site" field.
+func (u *ApplicationDescUpsertOne) ClearSite() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearSite()
+	})
+}
+
+// SetTagLine sets the "tag_line" field.
+func (u *ApplicationDescUpsertOne) SetTagLine(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetTagLine(v)
+	})
+}
+
+// UpdateTagLine sets the "tag_line" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateTagLine() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateTagLine()
+	})
+}
+
+// ClearTagLine clears the value of the "tag_line" field.
+func (u *ApplicationDescUpsertOne) ClearTagLine() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearTagLine()
+	})
+}
+
+// SetTags sets the "tags" field.
+func (u *ApplicationDescUpsertOne) SetTags(v []string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetTags(v)
+	})
+}
+
+// UpdateTags sets the "tags" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateTags() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateTags()
+	})
+}
+
+// ClearTags clears the value of the "tags" field.
+func (u *ApplicationDescUpsertOne) ClearTags() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearTags()
+	})
+}
+
+// SetPublished sets the "published" field.
+func (u *ApplicationDescUpsertOne) SetPublished(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetPublished(v)
+	})
+}
+
+// UpdatePublished sets the "published" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdatePublished() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdatePublished()
+	})
+}
+
+// ClearPublished clears the value of the "published" field.
+func (u *ApplicationDescUpsertOne) ClearPublished() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearPublished()
+	})
+}
+
+// Exec executes the query.
+func (u *ApplicationDescUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ApplicationDescCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ApplicationDescUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *ApplicationDescUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: ApplicationDescUpsertOne.ID is not supported by MySQL driver. Use ApplicationDescUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *ApplicationDescUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // ApplicationDescCreateBulk is the builder for creating many ApplicationDesc entities in bulk.
 type ApplicationDescCreateBulk struct {
 	config
 	err      error
 	builders []*ApplicationDescCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the ApplicationDesc entities in the database.
@@ -351,6 +921,7 @@ func (_c *ApplicationDescCreateBulk) Save(ctx context.Context) ([]*ApplicationDe
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -397,6 +968,351 @@ func (_c *ApplicationDescCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *ApplicationDescCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.ApplicationDesc.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ApplicationDescUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *ApplicationDescCreateBulk) OnConflict(opts ...sql.ConflictOption) *ApplicationDescUpsertBulk {
+	_c.conflict = opts
+	return &ApplicationDescUpsertBulk{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.ApplicationDesc.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *ApplicationDescCreateBulk) OnConflictColumns(columns ...string) *ApplicationDescUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &ApplicationDescUpsertBulk{
+		create: _c,
+	}
+}
+
+// ApplicationDescUpsertBulk is the builder for "upsert"-ing
+// a bulk of ApplicationDesc nodes.
+type ApplicationDescUpsertBulk struct {
+	create *ApplicationDescCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.ApplicationDesc.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(applicationdesc.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ApplicationDescUpsertBulk) UpdateNewValues() *ApplicationDescUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(applicationdesc.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.ApplicationDesc.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *ApplicationDescUpsertBulk) Ignore() *ApplicationDescUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ApplicationDescUpsertBulk) DoNothing() *ApplicationDescUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ApplicationDescCreateBulk.OnConflict
+// documentation for more info.
+func (u *ApplicationDescUpsertBulk) Update(set func(*ApplicationDescUpsert)) *ApplicationDescUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ApplicationDescUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *ApplicationDescUpsertBulk) SetName(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateName() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *ApplicationDescUpsertBulk) ClearName() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetVendor sets the "vendor" field.
+func (u *ApplicationDescUpsertBulk) SetVendor(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetVendor(v)
+	})
+}
+
+// UpdateVendor sets the "vendor" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateVendor() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateVendor()
+	})
+}
+
+// ClearVendor clears the value of the "vendor" field.
+func (u *ApplicationDescUpsertBulk) ClearVendor() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearVendor()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *ApplicationDescUpsertBulk) SetVersion(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateVersion() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// ClearVersion clears the value of the "version" field.
+func (u *ApplicationDescUpsertBulk) ClearVersion() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearVersion()
+	})
+}
+
+// SetCategory sets the "category" field.
+func (u *ApplicationDescUpsertBulk) SetCategory(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetCategory(v)
+	})
+}
+
+// UpdateCategory sets the "category" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateCategory() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateCategory()
+	})
+}
+
+// ClearCategory clears the value of the "category" field.
+func (u *ApplicationDescUpsertBulk) ClearCategory() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearCategory()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *ApplicationDescUpsertBulk) SetDescription(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateDescription() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *ApplicationDescUpsertBulk) ClearDescription() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetIcon sets the "icon" field.
+func (u *ApplicationDescUpsertBulk) SetIcon(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetIcon(v)
+	})
+}
+
+// UpdateIcon sets the "icon" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateIcon() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateIcon()
+	})
+}
+
+// ClearIcon clears the value of the "icon" field.
+func (u *ApplicationDescUpsertBulk) ClearIcon() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearIcon()
+	})
+}
+
+// SetArtifacturl sets the "artifacturl" field.
+func (u *ApplicationDescUpsertBulk) SetArtifacturl(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetArtifacturl(v)
+	})
+}
+
+// UpdateArtifacturl sets the "artifacturl" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateArtifacturl() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateArtifacturl()
+	})
+}
+
+// ClearArtifacturl clears the value of the "artifacturl" field.
+func (u *ApplicationDescUpsertBulk) ClearArtifacturl() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearArtifacturl()
+	})
+}
+
+// SetSite sets the "site" field.
+func (u *ApplicationDescUpsertBulk) SetSite(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetSite(v)
+	})
+}
+
+// UpdateSite sets the "site" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateSite() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateSite()
+	})
+}
+
+// ClearSite clears the value of the "site" field.
+func (u *ApplicationDescUpsertBulk) ClearSite() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearSite()
+	})
+}
+
+// SetTagLine sets the "tag_line" field.
+func (u *ApplicationDescUpsertBulk) SetTagLine(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetTagLine(v)
+	})
+}
+
+// UpdateTagLine sets the "tag_line" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateTagLine() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateTagLine()
+	})
+}
+
+// ClearTagLine clears the value of the "tag_line" field.
+func (u *ApplicationDescUpsertBulk) ClearTagLine() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearTagLine()
+	})
+}
+
+// SetTags sets the "tags" field.
+func (u *ApplicationDescUpsertBulk) SetTags(v []string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetTags(v)
+	})
+}
+
+// UpdateTags sets the "tags" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateTags() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateTags()
+	})
+}
+
+// ClearTags clears the value of the "tags" field.
+func (u *ApplicationDescUpsertBulk) ClearTags() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearTags()
+	})
+}
+
+// SetPublished sets the "published" field.
+func (u *ApplicationDescUpsertBulk) SetPublished(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetPublished(v)
+	})
+}
+
+// UpdatePublished sets the "published" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdatePublished() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdatePublished()
+	})
+}
+
+// ClearPublished clears the value of the "published" field.
+func (u *ApplicationDescUpsertBulk) ClearPublished() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearPublished()
+	})
+}
+
+// Exec executes the query.
+func (u *ApplicationDescUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ApplicationDescCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ApplicationDescCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ApplicationDescUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

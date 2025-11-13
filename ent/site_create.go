@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
@@ -21,6 +23,7 @@ type SiteCreate struct {
 	config
 	mutation *SiteMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetSiteID sets the "site_id" field.
@@ -133,6 +136,14 @@ func (_c *SiteCreate) SetID(v uuid.UUID) *SiteCreate {
 	return _c
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (_c *SiteCreate) SetNillableID(v *uuid.UUID) *SiteCreate {
+	if v != nil {
+		_c.SetID(*v)
+	}
+	return _c
+}
+
 // AddHostIDs adds the "hosts" edge to the Host entity by IDs.
 func (_c *SiteCreate) AddHostIDs(ids ...uuid.UUID) *SiteCreate {
 	_c.mutation.AddHostIDs(ids...)
@@ -160,6 +171,7 @@ func (_c *SiteCreate) Mutation() *SiteMutation {
 
 // Save creates the Site in the database.
 func (_c *SiteCreate) Save(ctx context.Context) (*Site, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -182,6 +194,14 @@ func (_c *SiteCreate) Exec(ctx context.Context) error {
 func (_c *SiteCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_c *SiteCreate) defaults() {
+	if _, ok := _c.mutation.ID(); !ok {
+		v := site.DefaultID()
+		_c.mutation.SetID(v)
 	}
 }
 
@@ -221,6 +241,7 @@ func (_c *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 		_node = &Site{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(site.Table, sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID))
 	)
+	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
@@ -289,11 +310,446 @@ func (_c *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Site.Create().
+//		SetSiteID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SiteUpsert) {
+//			SetSiteID(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *SiteCreate) OnConflict(opts ...sql.ConflictOption) *SiteUpsertOne {
+	_c.conflict = opts
+	return &SiteUpsertOne{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Site.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *SiteCreate) OnConflictColumns(columns ...string) *SiteUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &SiteUpsertOne{
+		create: _c,
+	}
+}
+
+type (
+	// SiteUpsertOne is the builder for "upsert"-ing
+	//  one Site node.
+	SiteUpsertOne struct {
+		create *SiteCreate
+	}
+
+	// SiteUpsert is the "OnConflict" setter.
+	SiteUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetSiteID sets the "site_id" field.
+func (u *SiteUpsert) SetSiteID(v string) *SiteUpsert {
+	u.Set(site.FieldSiteID, v)
+	return u
+}
+
+// UpdateSiteID sets the "site_id" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateSiteID() *SiteUpsert {
+	u.SetExcluded(site.FieldSiteID)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *SiteUpsert) SetName(v string) *SiteUpsert {
+	u.Set(site.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateName() *SiteUpsert {
+	u.SetExcluded(site.FieldName)
+	return u
+}
+
+// ClearName clears the value of the "name" field.
+func (u *SiteUpsert) ClearName() *SiteUpsert {
+	u.SetNull(site.FieldName)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *SiteUpsert) SetDescription(v string) *SiteUpsert {
+	u.Set(site.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateDescription() *SiteUpsert {
+	u.SetExcluded(site.FieldDescription)
+	return u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *SiteUpsert) ClearDescription() *SiteUpsert {
+	u.SetNull(site.FieldDescription)
+	return u
+}
+
+// SetLocation sets the "location" field.
+func (u *SiteUpsert) SetLocation(v string) *SiteUpsert {
+	u.Set(site.FieldLocation, v)
+	return u
+}
+
+// UpdateLocation sets the "location" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateLocation() *SiteUpsert {
+	u.SetExcluded(site.FieldLocation)
+	return u
+}
+
+// ClearLocation clears the value of the "location" field.
+func (u *SiteUpsert) ClearLocation() *SiteUpsert {
+	u.SetNull(site.FieldLocation)
+	return u
+}
+
+// SetOrchestratorID sets the "orchestrator_id" field.
+func (u *SiteUpsert) SetOrchestratorID(v uuid.UUID) *SiteUpsert {
+	u.Set(site.FieldOrchestratorID, v)
+	return u
+}
+
+// UpdateOrchestratorID sets the "orchestrator_id" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateOrchestratorID() *SiteUpsert {
+	u.SetExcluded(site.FieldOrchestratorID)
+	return u
+}
+
+// ClearOrchestratorID clears the value of the "orchestrator_id" field.
+func (u *SiteUpsert) ClearOrchestratorID() *SiteUpsert {
+	u.SetNull(site.FieldOrchestratorID)
+	return u
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *SiteUpsert) SetMetadata(v struct{}) *SiteUpsert {
+	u.Set(site.FieldMetadata, v)
+	return u
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateMetadata() *SiteUpsert {
+	u.SetExcluded(site.FieldMetadata)
+	return u
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *SiteUpsert) ClearMetadata() *SiteUpsert {
+	u.SetNull(site.FieldMetadata)
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *SiteUpsert) SetCreatedAt(v time.Time) *SiteUpsert {
+	u.Set(site.FieldCreatedAt, v)
+	return u
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateCreatedAt() *SiteUpsert {
+	u.SetExcluded(site.FieldCreatedAt)
+	return u
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *SiteUpsert) ClearCreatedAt() *SiteUpsert {
+	u.SetNull(site.FieldCreatedAt)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SiteUpsert) SetUpdatedAt(v time.Time) *SiteUpsert {
+	u.Set(site.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SiteUpsert) UpdateUpdatedAt() *SiteUpsert {
+	u.SetExcluded(site.FieldUpdatedAt)
+	return u
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *SiteUpsert) ClearUpdatedAt() *SiteUpsert {
+	u.SetNull(site.FieldUpdatedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Site.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(site.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SiteUpsertOne) UpdateNewValues() *SiteUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(site.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Site.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *SiteUpsertOne) Ignore() *SiteUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SiteUpsertOne) DoNothing() *SiteUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SiteCreate.OnConflict
+// documentation for more info.
+func (u *SiteUpsertOne) Update(set func(*SiteUpsert)) *SiteUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SiteUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetSiteID sets the "site_id" field.
+func (u *SiteUpsertOne) SetSiteID(v string) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetSiteID(v)
+	})
+}
+
+// UpdateSiteID sets the "site_id" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateSiteID() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateSiteID()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *SiteUpsertOne) SetName(v string) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateName() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *SiteUpsertOne) ClearName() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *SiteUpsertOne) SetDescription(v string) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateDescription() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *SiteUpsertOne) ClearDescription() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetLocation sets the "location" field.
+func (u *SiteUpsertOne) SetLocation(v string) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetLocation(v)
+	})
+}
+
+// UpdateLocation sets the "location" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateLocation() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateLocation()
+	})
+}
+
+// ClearLocation clears the value of the "location" field.
+func (u *SiteUpsertOne) ClearLocation() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearLocation()
+	})
+}
+
+// SetOrchestratorID sets the "orchestrator_id" field.
+func (u *SiteUpsertOne) SetOrchestratorID(v uuid.UUID) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetOrchestratorID(v)
+	})
+}
+
+// UpdateOrchestratorID sets the "orchestrator_id" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateOrchestratorID() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateOrchestratorID()
+	})
+}
+
+// ClearOrchestratorID clears the value of the "orchestrator_id" field.
+func (u *SiteUpsertOne) ClearOrchestratorID() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearOrchestratorID()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *SiteUpsertOne) SetMetadata(v struct{}) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateMetadata() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *SiteUpsertOne) ClearMetadata() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearMetadata()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *SiteUpsertOne) SetCreatedAt(v time.Time) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateCreatedAt() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *SiteUpsertOne) ClearCreatedAt() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SiteUpsertOne) SetUpdatedAt(v time.Time) *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SiteUpsertOne) UpdateUpdatedAt() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *SiteUpsertOne) ClearUpdatedAt() *SiteUpsertOne {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *SiteUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SiteCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SiteUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *SiteUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: SiteUpsertOne.ID is not supported by MySQL driver. Use SiteUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *SiteUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // SiteCreateBulk is the builder for creating many Site entities in bulk.
 type SiteCreateBulk struct {
 	config
 	err      error
 	builders []*SiteCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Site entities in the database.
@@ -307,6 +763,7 @@ func (_c *SiteCreateBulk) Save(ctx context.Context) ([]*Site, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SiteMutation)
 				if !ok {
@@ -322,6 +779,7 @@ func (_c *SiteCreateBulk) Save(ctx context.Context) ([]*Site, error) {
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -368,6 +826,281 @@ func (_c *SiteCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *SiteCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Site.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SiteUpsert) {
+//			SetSiteID(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *SiteCreateBulk) OnConflict(opts ...sql.ConflictOption) *SiteUpsertBulk {
+	_c.conflict = opts
+	return &SiteUpsertBulk{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Site.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *SiteCreateBulk) OnConflictColumns(columns ...string) *SiteUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &SiteUpsertBulk{
+		create: _c,
+	}
+}
+
+// SiteUpsertBulk is the builder for "upsert"-ing
+// a bulk of Site nodes.
+type SiteUpsertBulk struct {
+	create *SiteCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Site.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(site.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SiteUpsertBulk) UpdateNewValues() *SiteUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(site.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Site.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *SiteUpsertBulk) Ignore() *SiteUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SiteUpsertBulk) DoNothing() *SiteUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SiteCreateBulk.OnConflict
+// documentation for more info.
+func (u *SiteUpsertBulk) Update(set func(*SiteUpsert)) *SiteUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SiteUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetSiteID sets the "site_id" field.
+func (u *SiteUpsertBulk) SetSiteID(v string) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetSiteID(v)
+	})
+}
+
+// UpdateSiteID sets the "site_id" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateSiteID() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateSiteID()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *SiteUpsertBulk) SetName(v string) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateName() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *SiteUpsertBulk) ClearName() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *SiteUpsertBulk) SetDescription(v string) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateDescription() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *SiteUpsertBulk) ClearDescription() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetLocation sets the "location" field.
+func (u *SiteUpsertBulk) SetLocation(v string) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetLocation(v)
+	})
+}
+
+// UpdateLocation sets the "location" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateLocation() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateLocation()
+	})
+}
+
+// ClearLocation clears the value of the "location" field.
+func (u *SiteUpsertBulk) ClearLocation() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearLocation()
+	})
+}
+
+// SetOrchestratorID sets the "orchestrator_id" field.
+func (u *SiteUpsertBulk) SetOrchestratorID(v uuid.UUID) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetOrchestratorID(v)
+	})
+}
+
+// UpdateOrchestratorID sets the "orchestrator_id" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateOrchestratorID() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateOrchestratorID()
+	})
+}
+
+// ClearOrchestratorID clears the value of the "orchestrator_id" field.
+func (u *SiteUpsertBulk) ClearOrchestratorID() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearOrchestratorID()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *SiteUpsertBulk) SetMetadata(v struct{}) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateMetadata() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *SiteUpsertBulk) ClearMetadata() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearMetadata()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *SiteUpsertBulk) SetCreatedAt(v time.Time) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateCreatedAt() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *SiteUpsertBulk) ClearCreatedAt() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SiteUpsertBulk) SetUpdatedAt(v time.Time) *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SiteUpsertBulk) UpdateUpdatedAt() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *SiteUpsertBulk) ClearUpdatedAt() *SiteUpsertBulk {
+	return u.Update(func(s *SiteUpsert) {
+		s.ClearUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *SiteUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the SiteCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SiteCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SiteUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

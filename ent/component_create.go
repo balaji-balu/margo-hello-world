@@ -4,8 +4,10 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
@@ -18,6 +20,7 @@ type ComponentCreate struct {
 	config
 	mutation *ComponentMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
@@ -135,6 +138,7 @@ func (_c *ComponentCreate) createSpec() (*Component, *sqlgraph.CreateSpec) {
 		_node = &Component{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(component.Table, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint))
 	)
+	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -167,11 +171,259 @@ func (_c *ComponentCreate) createSpec() (*Component, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Component.Create().
+//		SetDeploymentProfileID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ComponentUpsert) {
+//			SetDeploymentProfileID(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *ComponentCreate) OnConflict(opts ...sql.ConflictOption) *ComponentUpsertOne {
+	_c.conflict = opts
+	return &ComponentUpsertOne{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Component.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *ComponentCreate) OnConflictColumns(columns ...string) *ComponentUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &ComponentUpsertOne{
+		create: _c,
+	}
+}
+
+type (
+	// ComponentUpsertOne is the builder for "upsert"-ing
+	//  one Component node.
+	ComponentUpsertOne struct {
+		create *ComponentCreate
+	}
+
+	// ComponentUpsert is the "OnConflict" setter.
+	ComponentUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetDeploymentProfileID sets the "deployment_profile_id" field.
+func (u *ComponentUpsert) SetDeploymentProfileID(v string) *ComponentUpsert {
+	u.Set(component.FieldDeploymentProfileID, v)
+	return u
+}
+
+// UpdateDeploymentProfileID sets the "deployment_profile_id" field to the value that was provided on create.
+func (u *ComponentUpsert) UpdateDeploymentProfileID() *ComponentUpsert {
+	u.SetExcluded(component.FieldDeploymentProfileID)
+	return u
+}
+
+// ClearDeploymentProfileID clears the value of the "deployment_profile_id" field.
+func (u *ComponentUpsert) ClearDeploymentProfileID() *ComponentUpsert {
+	u.SetNull(component.FieldDeploymentProfileID)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *ComponentUpsert) SetName(v string) *ComponentUpsert {
+	u.Set(component.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ComponentUpsert) UpdateName() *ComponentUpsert {
+	u.SetExcluded(component.FieldName)
+	return u
+}
+
+// ClearName clears the value of the "name" field.
+func (u *ComponentUpsert) ClearName() *ComponentUpsert {
+	u.SetNull(component.FieldName)
+	return u
+}
+
+// SetProperties sets the "properties" field.
+func (u *ComponentUpsert) SetProperties(v application.ComponentProperties) *ComponentUpsert {
+	u.Set(component.FieldProperties, v)
+	return u
+}
+
+// UpdateProperties sets the "properties" field to the value that was provided on create.
+func (u *ComponentUpsert) UpdateProperties() *ComponentUpsert {
+	u.SetExcluded(component.FieldProperties)
+	return u
+}
+
+// ClearProperties clears the value of the "properties" field.
+func (u *ComponentUpsert) ClearProperties() *ComponentUpsert {
+	u.SetNull(component.FieldProperties)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Component.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(component.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ComponentUpsertOne) UpdateNewValues() *ComponentUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(component.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Component.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *ComponentUpsertOne) Ignore() *ComponentUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ComponentUpsertOne) DoNothing() *ComponentUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ComponentCreate.OnConflict
+// documentation for more info.
+func (u *ComponentUpsertOne) Update(set func(*ComponentUpsert)) *ComponentUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ComponentUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetDeploymentProfileID sets the "deployment_profile_id" field.
+func (u *ComponentUpsertOne) SetDeploymentProfileID(v string) *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.SetDeploymentProfileID(v)
+	})
+}
+
+// UpdateDeploymentProfileID sets the "deployment_profile_id" field to the value that was provided on create.
+func (u *ComponentUpsertOne) UpdateDeploymentProfileID() *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.UpdateDeploymentProfileID()
+	})
+}
+
+// ClearDeploymentProfileID clears the value of the "deployment_profile_id" field.
+func (u *ComponentUpsertOne) ClearDeploymentProfileID() *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.ClearDeploymentProfileID()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ComponentUpsertOne) SetName(v string) *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ComponentUpsertOne) UpdateName() *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *ComponentUpsertOne) ClearName() *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetProperties sets the "properties" field.
+func (u *ComponentUpsertOne) SetProperties(v application.ComponentProperties) *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.SetProperties(v)
+	})
+}
+
+// UpdateProperties sets the "properties" field to the value that was provided on create.
+func (u *ComponentUpsertOne) UpdateProperties() *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.UpdateProperties()
+	})
+}
+
+// ClearProperties clears the value of the "properties" field.
+func (u *ComponentUpsertOne) ClearProperties() *ComponentUpsertOne {
+	return u.Update(func(s *ComponentUpsert) {
+		s.ClearProperties()
+	})
+}
+
+// Exec executes the query.
+func (u *ComponentUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ComponentCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ComponentUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *ComponentUpsertOne) ID(ctx context.Context) (id uint, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *ComponentUpsertOne) IDX(ctx context.Context) uint {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // ComponentCreateBulk is the builder for creating many Component entities in bulk.
 type ComponentCreateBulk struct {
 	config
 	err      error
 	builders []*ComponentCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Component entities in the database.
@@ -200,6 +452,7 @@ func (_c *ComponentCreateBulk) Save(ctx context.Context) ([]*Component, error) {
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -250,6 +503,183 @@ func (_c *ComponentCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *ComponentCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Component.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ComponentUpsert) {
+//			SetDeploymentProfileID(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *ComponentCreateBulk) OnConflict(opts ...sql.ConflictOption) *ComponentUpsertBulk {
+	_c.conflict = opts
+	return &ComponentUpsertBulk{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Component.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *ComponentCreateBulk) OnConflictColumns(columns ...string) *ComponentUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &ComponentUpsertBulk{
+		create: _c,
+	}
+}
+
+// ComponentUpsertBulk is the builder for "upsert"-ing
+// a bulk of Component nodes.
+type ComponentUpsertBulk struct {
+	create *ComponentCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Component.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(component.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ComponentUpsertBulk) UpdateNewValues() *ComponentUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(component.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Component.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *ComponentUpsertBulk) Ignore() *ComponentUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ComponentUpsertBulk) DoNothing() *ComponentUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ComponentCreateBulk.OnConflict
+// documentation for more info.
+func (u *ComponentUpsertBulk) Update(set func(*ComponentUpsert)) *ComponentUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ComponentUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetDeploymentProfileID sets the "deployment_profile_id" field.
+func (u *ComponentUpsertBulk) SetDeploymentProfileID(v string) *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.SetDeploymentProfileID(v)
+	})
+}
+
+// UpdateDeploymentProfileID sets the "deployment_profile_id" field to the value that was provided on create.
+func (u *ComponentUpsertBulk) UpdateDeploymentProfileID() *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.UpdateDeploymentProfileID()
+	})
+}
+
+// ClearDeploymentProfileID clears the value of the "deployment_profile_id" field.
+func (u *ComponentUpsertBulk) ClearDeploymentProfileID() *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.ClearDeploymentProfileID()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ComponentUpsertBulk) SetName(v string) *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ComponentUpsertBulk) UpdateName() *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *ComponentUpsertBulk) ClearName() *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetProperties sets the "properties" field.
+func (u *ComponentUpsertBulk) SetProperties(v application.ComponentProperties) *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.SetProperties(v)
+	})
+}
+
+// UpdateProperties sets the "properties" field to the value that was provided on create.
+func (u *ComponentUpsertBulk) UpdateProperties() *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.UpdateProperties()
+	})
+}
+
+// ClearProperties clears the value of the "properties" field.
+func (u *ComponentUpsertBulk) ClearProperties() *ComponentUpsertBulk {
+	return u.Update(func(s *ComponentUpsert) {
+		s.ClearProperties()
+	})
+}
+
+// Exec executes the query.
+func (u *ComponentUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ComponentCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ComponentCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ComponentUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

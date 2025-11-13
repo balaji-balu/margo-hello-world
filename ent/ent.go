@@ -14,7 +14,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
+	"github.com/balaji-balu/margo-hello-world/ent/deploymentcomponentstatus"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
+	"github.com/balaji-balu/margo-hello-world/ent/deploymentstatus"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
 	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/ent/site"
@@ -79,13 +81,15 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			applicationdesc.Table:   applicationdesc.ValidColumn,
-			component.Table:         component.ValidColumn,
-			deploymentprofile.Table: deploymentprofile.ValidColumn,
-			host.Table:              host.ValidColumn,
-			orchestrator.Table:      orchestrator.ValidColumn,
-			site.Table:              site.ValidColumn,
-			user.Table:              user.ValidColumn,
+			applicationdesc.Table:           applicationdesc.ValidColumn,
+			component.Table:                 component.ValidColumn,
+			deploymentcomponentstatus.Table: deploymentcomponentstatus.ValidColumn,
+			deploymentprofile.Table:         deploymentprofile.ValidColumn,
+			deploymentstatus.Table:          deploymentstatus.ValidColumn,
+			host.Table:                      host.ValidColumn,
+			orchestrator.Table:              orchestrator.ValidColumn,
+			site.Table:                      site.ValidColumn,
+			user.Table:                      user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

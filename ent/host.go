@@ -24,16 +24,20 @@ type Host struct {
 	HostID string `json:"host_id,omitempty"`
 	// SiteID holds the value of the "site_id" field.
 	SiteID uuid.UUID `json:"site_id,omitempty"`
+	// Runtime holds the value of the "runtime" field.
+	Runtime string `json:"runtime,omitempty"`
+	// LastHeartbeat holds the value of the "last_heartbeat" field.
+	LastHeartbeat time.Time `json:"last_heartbeat,omitempty"`
+	// CPUFree holds the value of the "cpu_free" field.
+	CPUFree float64 `json:"cpu_free,omitempty"`
+	// Status holds the value of the "status" field.
+	Status string `json:"status,omitempty"`
 	// Hostname holds the value of the "hostname" field.
 	Hostname string `json:"hostname,omitempty"`
 	// IPAddress holds the value of the "ip_address" field.
 	IPAddress string `json:"ip_address,omitempty"`
 	// EdgeURL holds the value of the "edge_url" field.
 	EdgeURL string `json:"edge_url,omitempty"`
-	// Status holds the value of the "status" field.
-	Status string `json:"status,omitempty"`
-	// LastHeartbeat holds the value of the "last_heartbeat" field.
-	LastHeartbeat time.Time `json:"last_heartbeat,omitempty"`
 	// Metadata holds the value of the "metadata" field.
 	Metadata struct{} `json:"metadata,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -73,7 +77,9 @@ func (*Host) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case host.FieldMetadata:
 			values[i] = new([]byte)
-		case host.FieldHostID, host.FieldHostname, host.FieldIPAddress, host.FieldEdgeURL, host.FieldStatus:
+		case host.FieldCPUFree:
+			values[i] = new(sql.NullFloat64)
+		case host.FieldHostID, host.FieldRuntime, host.FieldStatus, host.FieldHostname, host.FieldIPAddress, host.FieldEdgeURL:
 			values[i] = new(sql.NullString)
 		case host.FieldLastHeartbeat, host.FieldCreatedAt, host.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -112,6 +118,30 @@ func (_m *Host) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				_m.SiteID = *value
 			}
+		case host.FieldRuntime:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field runtime", values[i])
+			} else if value.Valid {
+				_m.Runtime = value.String
+			}
+		case host.FieldLastHeartbeat:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_heartbeat", values[i])
+			} else if value.Valid {
+				_m.LastHeartbeat = value.Time
+			}
+		case host.FieldCPUFree:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field cpu_free", values[i])
+			} else if value.Valid {
+				_m.CPUFree = value.Float64
+			}
+		case host.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				_m.Status = value.String
+			}
 		case host.FieldHostname:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field hostname", values[i])
@@ -129,18 +159,6 @@ func (_m *Host) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field edge_url", values[i])
 			} else if value.Valid {
 				_m.EdgeURL = value.String
-			}
-		case host.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				_m.Status = value.String
-			}
-		case host.FieldLastHeartbeat:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field last_heartbeat", values[i])
-			} else if value.Valid {
-				_m.LastHeartbeat = value.Time
 			}
 		case host.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -209,6 +227,18 @@ func (_m *Host) String() string {
 	builder.WriteString("site_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.SiteID))
 	builder.WriteString(", ")
+	builder.WriteString("runtime=")
+	builder.WriteString(_m.Runtime)
+	builder.WriteString(", ")
+	builder.WriteString("last_heartbeat=")
+	builder.WriteString(_m.LastHeartbeat.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("cpu_free=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CPUFree))
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(_m.Status)
+	builder.WriteString(", ")
 	builder.WriteString("hostname=")
 	builder.WriteString(_m.Hostname)
 	builder.WriteString(", ")
@@ -217,12 +247,6 @@ func (_m *Host) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("edge_url=")
 	builder.WriteString(_m.EdgeURL)
-	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(_m.Status)
-	builder.WriteString(", ")
-	builder.WriteString("last_heartbeat=")
-	builder.WriteString(_m.LastHeartbeat.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))

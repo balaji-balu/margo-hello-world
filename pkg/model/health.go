@@ -1,4 +1,4 @@
-package pkg
+package model
 
 type HealthMsg struct {
 	NodeID     string  `json:"node_id"`

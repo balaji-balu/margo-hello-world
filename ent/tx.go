@@ -16,8 +16,12 @@ type Tx struct {
 	ApplicationDesc *ApplicationDescClient
 	// Component is the client for interacting with the Component builders.
 	Component *ComponentClient
+	// DeploymentComponentStatus is the client for interacting with the DeploymentComponentStatus builders.
+	DeploymentComponentStatus *DeploymentComponentStatusClient
 	// DeploymentProfile is the client for interacting with the DeploymentProfile builders.
 	DeploymentProfile *DeploymentProfileClient
+	// DeploymentStatus is the client for interacting with the DeploymentStatus builders.
+	DeploymentStatus *DeploymentStatusClient
 	// Host is the client for interacting with the Host builders.
 	Host *HostClient
 	// Orchestrator is the client for interacting with the Orchestrator builders.
@@ -159,7 +163,9 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.ApplicationDesc = NewApplicationDescClient(tx.config)
 	tx.Component = NewComponentClient(tx.config)
+	tx.DeploymentComponentStatus = NewDeploymentComponentStatusClient(tx.config)
 	tx.DeploymentProfile = NewDeploymentProfileClient(tx.config)
+	tx.DeploymentStatus = NewDeploymentStatusClient(tx.config)
 	tx.Host = NewHostClient(tx.config)
 	tx.Orchestrator = NewOrchestratorClient(tx.config)
 	tx.Site = NewSiteClient(tx.config)

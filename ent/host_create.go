@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
@@ -20,6 +22,7 @@ type HostCreate struct {
 	config
 	mutation *HostMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetHostID sets the "host_id" field.
@@ -38,6 +41,62 @@ func (_c *HostCreate) SetSiteID(v uuid.UUID) *HostCreate {
 func (_c *HostCreate) SetNillableSiteID(v *uuid.UUID) *HostCreate {
 	if v != nil {
 		_c.SetSiteID(*v)
+	}
+	return _c
+}
+
+// SetRuntime sets the "runtime" field.
+func (_c *HostCreate) SetRuntime(v string) *HostCreate {
+	_c.mutation.SetRuntime(v)
+	return _c
+}
+
+// SetNillableRuntime sets the "runtime" field if the given value is not nil.
+func (_c *HostCreate) SetNillableRuntime(v *string) *HostCreate {
+	if v != nil {
+		_c.SetRuntime(*v)
+	}
+	return _c
+}
+
+// SetLastHeartbeat sets the "last_heartbeat" field.
+func (_c *HostCreate) SetLastHeartbeat(v time.Time) *HostCreate {
+	_c.mutation.SetLastHeartbeat(v)
+	return _c
+}
+
+// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
+func (_c *HostCreate) SetNillableLastHeartbeat(v *time.Time) *HostCreate {
+	if v != nil {
+		_c.SetLastHeartbeat(*v)
+	}
+	return _c
+}
+
+// SetCPUFree sets the "cpu_free" field.
+func (_c *HostCreate) SetCPUFree(v float64) *HostCreate {
+	_c.mutation.SetCPUFree(v)
+	return _c
+}
+
+// SetNillableCPUFree sets the "cpu_free" field if the given value is not nil.
+func (_c *HostCreate) SetNillableCPUFree(v *float64) *HostCreate {
+	if v != nil {
+		_c.SetCPUFree(*v)
+	}
+	return _c
+}
+
+// SetStatus sets the "status" field.
+func (_c *HostCreate) SetStatus(v string) *HostCreate {
+	_c.mutation.SetStatus(v)
+	return _c
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_c *HostCreate) SetNillableStatus(v *string) *HostCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
 	return _c
 }
@@ -80,34 +139,6 @@ func (_c *HostCreate) SetEdgeURL(v string) *HostCreate {
 func (_c *HostCreate) SetNillableEdgeURL(v *string) *HostCreate {
 	if v != nil {
 		_c.SetEdgeURL(*v)
-	}
-	return _c
-}
-
-// SetStatus sets the "status" field.
-func (_c *HostCreate) SetStatus(v string) *HostCreate {
-	_c.mutation.SetStatus(v)
-	return _c
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (_c *HostCreate) SetNillableStatus(v *string) *HostCreate {
-	if v != nil {
-		_c.SetStatus(*v)
-	}
-	return _c
-}
-
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (_c *HostCreate) SetLastHeartbeat(v time.Time) *HostCreate {
-	_c.mutation.SetLastHeartbeat(v)
-	return _c
-}
-
-// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
-func (_c *HostCreate) SetNillableLastHeartbeat(v *time.Time) *HostCreate {
-	if v != nil {
-		_c.SetLastHeartbeat(*v)
 	}
 	return _c
 }
@@ -160,6 +191,14 @@ func (_c *HostCreate) SetID(v uuid.UUID) *HostCreate {
 	return _c
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (_c *HostCreate) SetNillableID(v *uuid.UUID) *HostCreate {
+	if v != nil {
+		_c.SetID(*v)
+	}
+	return _c
+}
+
 // SetSite sets the "site" edge to the Site entity.
 func (_c *HostCreate) SetSite(v *Site) *HostCreate {
 	return _c.SetSiteID(v.ID)
@@ -172,6 +211,7 @@ func (_c *HostCreate) Mutation() *HostMutation {
 
 // Save creates the Host in the database.
 func (_c *HostCreate) Save(ctx context.Context) (*Host, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -194,6 +234,14 @@ func (_c *HostCreate) Exec(ctx context.Context) error {
 func (_c *HostCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_c *HostCreate) defaults() {
+	if _, ok := _c.mutation.ID(); !ok {
+		v := host.DefaultID()
+		_c.mutation.SetID(v)
 	}
 }
 
@@ -233,6 +281,7 @@ func (_c *HostCreate) createSpec() (*Host, *sqlgraph.CreateSpec) {
 		_node = &Host{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(host.Table, sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID))
 	)
+	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
@@ -240,6 +289,22 @@ func (_c *HostCreate) createSpec() (*Host, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.HostID(); ok {
 		_spec.SetField(host.FieldHostID, field.TypeString, value)
 		_node.HostID = value
+	}
+	if value, ok := _c.mutation.Runtime(); ok {
+		_spec.SetField(host.FieldRuntime, field.TypeString, value)
+		_node.Runtime = value
+	}
+	if value, ok := _c.mutation.LastHeartbeat(); ok {
+		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
+		_node.LastHeartbeat = value
+	}
+	if value, ok := _c.mutation.CPUFree(); ok {
+		_spec.SetField(host.FieldCPUFree, field.TypeFloat64, value)
+		_node.CPUFree = value
+	}
+	if value, ok := _c.mutation.Status(); ok {
+		_spec.SetField(host.FieldStatus, field.TypeString, value)
+		_node.Status = value
 	}
 	if value, ok := _c.mutation.Hostname(); ok {
 		_spec.SetField(host.FieldHostname, field.TypeString, value)
@@ -252,14 +317,6 @@ func (_c *HostCreate) createSpec() (*Host, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.EdgeURL(); ok {
 		_spec.SetField(host.FieldEdgeURL, field.TypeString, value)
 		_node.EdgeURL = value
-	}
-	if value, ok := _c.mutation.Status(); ok {
-		_spec.SetField(host.FieldStatus, field.TypeString, value)
-		_node.Status = value
-	}
-	if value, ok := _c.mutation.LastHeartbeat(); ok {
-		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
-		_node.LastHeartbeat = value
 	}
 	if value, ok := _c.mutation.Metadata(); ok {
 		_spec.SetField(host.FieldMetadata, field.TypeJSON, value)
@@ -293,11 +350,615 @@ func (_c *HostCreate) createSpec() (*Host, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Host.Create().
+//		SetHostID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.HostUpsert) {
+//			SetHostID(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *HostCreate) OnConflict(opts ...sql.ConflictOption) *HostUpsertOne {
+	_c.conflict = opts
+	return &HostUpsertOne{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Host.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *HostCreate) OnConflictColumns(columns ...string) *HostUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &HostUpsertOne{
+		create: _c,
+	}
+}
+
+type (
+	// HostUpsertOne is the builder for "upsert"-ing
+	//  one Host node.
+	HostUpsertOne struct {
+		create *HostCreate
+	}
+
+	// HostUpsert is the "OnConflict" setter.
+	HostUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetHostID sets the "host_id" field.
+func (u *HostUpsert) SetHostID(v string) *HostUpsert {
+	u.Set(host.FieldHostID, v)
+	return u
+}
+
+// UpdateHostID sets the "host_id" field to the value that was provided on create.
+func (u *HostUpsert) UpdateHostID() *HostUpsert {
+	u.SetExcluded(host.FieldHostID)
+	return u
+}
+
+// SetSiteID sets the "site_id" field.
+func (u *HostUpsert) SetSiteID(v uuid.UUID) *HostUpsert {
+	u.Set(host.FieldSiteID, v)
+	return u
+}
+
+// UpdateSiteID sets the "site_id" field to the value that was provided on create.
+func (u *HostUpsert) UpdateSiteID() *HostUpsert {
+	u.SetExcluded(host.FieldSiteID)
+	return u
+}
+
+// ClearSiteID clears the value of the "site_id" field.
+func (u *HostUpsert) ClearSiteID() *HostUpsert {
+	u.SetNull(host.FieldSiteID)
+	return u
+}
+
+// SetRuntime sets the "runtime" field.
+func (u *HostUpsert) SetRuntime(v string) *HostUpsert {
+	u.Set(host.FieldRuntime, v)
+	return u
+}
+
+// UpdateRuntime sets the "runtime" field to the value that was provided on create.
+func (u *HostUpsert) UpdateRuntime() *HostUpsert {
+	u.SetExcluded(host.FieldRuntime)
+	return u
+}
+
+// ClearRuntime clears the value of the "runtime" field.
+func (u *HostUpsert) ClearRuntime() *HostUpsert {
+	u.SetNull(host.FieldRuntime)
+	return u
+}
+
+// SetLastHeartbeat sets the "last_heartbeat" field.
+func (u *HostUpsert) SetLastHeartbeat(v time.Time) *HostUpsert {
+	u.Set(host.FieldLastHeartbeat, v)
+	return u
+}
+
+// UpdateLastHeartbeat sets the "last_heartbeat" field to the value that was provided on create.
+func (u *HostUpsert) UpdateLastHeartbeat() *HostUpsert {
+	u.SetExcluded(host.FieldLastHeartbeat)
+	return u
+}
+
+// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
+func (u *HostUpsert) ClearLastHeartbeat() *HostUpsert {
+	u.SetNull(host.FieldLastHeartbeat)
+	return u
+}
+
+// SetCPUFree sets the "cpu_free" field.
+func (u *HostUpsert) SetCPUFree(v float64) *HostUpsert {
+	u.Set(host.FieldCPUFree, v)
+	return u
+}
+
+// UpdateCPUFree sets the "cpu_free" field to the value that was provided on create.
+func (u *HostUpsert) UpdateCPUFree() *HostUpsert {
+	u.SetExcluded(host.FieldCPUFree)
+	return u
+}
+
+// AddCPUFree adds v to the "cpu_free" field.
+func (u *HostUpsert) AddCPUFree(v float64) *HostUpsert {
+	u.Add(host.FieldCPUFree, v)
+	return u
+}
+
+// ClearCPUFree clears the value of the "cpu_free" field.
+func (u *HostUpsert) ClearCPUFree() *HostUpsert {
+	u.SetNull(host.FieldCPUFree)
+	return u
+}
+
+// SetStatus sets the "status" field.
+func (u *HostUpsert) SetStatus(v string) *HostUpsert {
+	u.Set(host.FieldStatus, v)
+	return u
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *HostUpsert) UpdateStatus() *HostUpsert {
+	u.SetExcluded(host.FieldStatus)
+	return u
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *HostUpsert) ClearStatus() *HostUpsert {
+	u.SetNull(host.FieldStatus)
+	return u
+}
+
+// SetHostname sets the "hostname" field.
+func (u *HostUpsert) SetHostname(v string) *HostUpsert {
+	u.Set(host.FieldHostname, v)
+	return u
+}
+
+// UpdateHostname sets the "hostname" field to the value that was provided on create.
+func (u *HostUpsert) UpdateHostname() *HostUpsert {
+	u.SetExcluded(host.FieldHostname)
+	return u
+}
+
+// ClearHostname clears the value of the "hostname" field.
+func (u *HostUpsert) ClearHostname() *HostUpsert {
+	u.SetNull(host.FieldHostname)
+	return u
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *HostUpsert) SetIPAddress(v string) *HostUpsert {
+	u.Set(host.FieldIPAddress, v)
+	return u
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *HostUpsert) UpdateIPAddress() *HostUpsert {
+	u.SetExcluded(host.FieldIPAddress)
+	return u
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *HostUpsert) ClearIPAddress() *HostUpsert {
+	u.SetNull(host.FieldIPAddress)
+	return u
+}
+
+// SetEdgeURL sets the "edge_url" field.
+func (u *HostUpsert) SetEdgeURL(v string) *HostUpsert {
+	u.Set(host.FieldEdgeURL, v)
+	return u
+}
+
+// UpdateEdgeURL sets the "edge_url" field to the value that was provided on create.
+func (u *HostUpsert) UpdateEdgeURL() *HostUpsert {
+	u.SetExcluded(host.FieldEdgeURL)
+	return u
+}
+
+// ClearEdgeURL clears the value of the "edge_url" field.
+func (u *HostUpsert) ClearEdgeURL() *HostUpsert {
+	u.SetNull(host.FieldEdgeURL)
+	return u
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *HostUpsert) SetMetadata(v struct{}) *HostUpsert {
+	u.Set(host.FieldMetadata, v)
+	return u
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *HostUpsert) UpdateMetadata() *HostUpsert {
+	u.SetExcluded(host.FieldMetadata)
+	return u
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *HostUpsert) ClearMetadata() *HostUpsert {
+	u.SetNull(host.FieldMetadata)
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *HostUpsert) SetCreatedAt(v time.Time) *HostUpsert {
+	u.Set(host.FieldCreatedAt, v)
+	return u
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *HostUpsert) UpdateCreatedAt() *HostUpsert {
+	u.SetExcluded(host.FieldCreatedAt)
+	return u
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *HostUpsert) ClearCreatedAt() *HostUpsert {
+	u.SetNull(host.FieldCreatedAt)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *HostUpsert) SetUpdatedAt(v time.Time) *HostUpsert {
+	u.Set(host.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *HostUpsert) UpdateUpdatedAt() *HostUpsert {
+	u.SetExcluded(host.FieldUpdatedAt)
+	return u
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *HostUpsert) ClearUpdatedAt() *HostUpsert {
+	u.SetNull(host.FieldUpdatedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Host.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(host.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *HostUpsertOne) UpdateNewValues() *HostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(host.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Host.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *HostUpsertOne) Ignore() *HostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *HostUpsertOne) DoNothing() *HostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the HostCreate.OnConflict
+// documentation for more info.
+func (u *HostUpsertOne) Update(set func(*HostUpsert)) *HostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&HostUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetHostID sets the "host_id" field.
+func (u *HostUpsertOne) SetHostID(v string) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetHostID(v)
+	})
+}
+
+// UpdateHostID sets the "host_id" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateHostID() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateHostID()
+	})
+}
+
+// SetSiteID sets the "site_id" field.
+func (u *HostUpsertOne) SetSiteID(v uuid.UUID) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetSiteID(v)
+	})
+}
+
+// UpdateSiteID sets the "site_id" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateSiteID() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateSiteID()
+	})
+}
+
+// ClearSiteID clears the value of the "site_id" field.
+func (u *HostUpsertOne) ClearSiteID() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearSiteID()
+	})
+}
+
+// SetRuntime sets the "runtime" field.
+func (u *HostUpsertOne) SetRuntime(v string) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetRuntime(v)
+	})
+}
+
+// UpdateRuntime sets the "runtime" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateRuntime() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateRuntime()
+	})
+}
+
+// ClearRuntime clears the value of the "runtime" field.
+func (u *HostUpsertOne) ClearRuntime() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearRuntime()
+	})
+}
+
+// SetLastHeartbeat sets the "last_heartbeat" field.
+func (u *HostUpsertOne) SetLastHeartbeat(v time.Time) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetLastHeartbeat(v)
+	})
+}
+
+// UpdateLastHeartbeat sets the "last_heartbeat" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateLastHeartbeat() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateLastHeartbeat()
+	})
+}
+
+// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
+func (u *HostUpsertOne) ClearLastHeartbeat() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearLastHeartbeat()
+	})
+}
+
+// SetCPUFree sets the "cpu_free" field.
+func (u *HostUpsertOne) SetCPUFree(v float64) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetCPUFree(v)
+	})
+}
+
+// AddCPUFree adds v to the "cpu_free" field.
+func (u *HostUpsertOne) AddCPUFree(v float64) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.AddCPUFree(v)
+	})
+}
+
+// UpdateCPUFree sets the "cpu_free" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateCPUFree() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateCPUFree()
+	})
+}
+
+// ClearCPUFree clears the value of the "cpu_free" field.
+func (u *HostUpsertOne) ClearCPUFree() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearCPUFree()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *HostUpsertOne) SetStatus(v string) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateStatus() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *HostUpsertOne) ClearStatus() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearStatus()
+	})
+}
+
+// SetHostname sets the "hostname" field.
+func (u *HostUpsertOne) SetHostname(v string) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetHostname(v)
+	})
+}
+
+// UpdateHostname sets the "hostname" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateHostname() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateHostname()
+	})
+}
+
+// ClearHostname clears the value of the "hostname" field.
+func (u *HostUpsertOne) ClearHostname() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearHostname()
+	})
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *HostUpsertOne) SetIPAddress(v string) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetIPAddress(v)
+	})
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateIPAddress() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateIPAddress()
+	})
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *HostUpsertOne) ClearIPAddress() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearIPAddress()
+	})
+}
+
+// SetEdgeURL sets the "edge_url" field.
+func (u *HostUpsertOne) SetEdgeURL(v string) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetEdgeURL(v)
+	})
+}
+
+// UpdateEdgeURL sets the "edge_url" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateEdgeURL() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateEdgeURL()
+	})
+}
+
+// ClearEdgeURL clears the value of the "edge_url" field.
+func (u *HostUpsertOne) ClearEdgeURL() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearEdgeURL()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *HostUpsertOne) SetMetadata(v struct{}) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateMetadata() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *HostUpsertOne) ClearMetadata() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearMetadata()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *HostUpsertOne) SetCreatedAt(v time.Time) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateCreatedAt() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *HostUpsertOne) ClearCreatedAt() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *HostUpsertOne) SetUpdatedAt(v time.Time) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateUpdatedAt() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *HostUpsertOne) ClearUpdatedAt() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *HostUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for HostCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *HostUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *HostUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: HostUpsertOne.ID is not supported by MySQL driver. Use HostUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *HostUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // HostCreateBulk is the builder for creating many Host entities in bulk.
 type HostCreateBulk struct {
 	config
 	err      error
 	builders []*HostCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Host entities in the database.
@@ -311,6 +972,7 @@ func (_c *HostCreateBulk) Save(ctx context.Context) ([]*Host, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*HostMutation)
 				if !ok {
@@ -326,6 +988,7 @@ func (_c *HostCreateBulk) Save(ctx context.Context) ([]*Host, error) {
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -372,6 +1035,372 @@ func (_c *HostCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *HostCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Host.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.HostUpsert) {
+//			SetHostID(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *HostCreateBulk) OnConflict(opts ...sql.ConflictOption) *HostUpsertBulk {
+	_c.conflict = opts
+	return &HostUpsertBulk{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Host.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *HostCreateBulk) OnConflictColumns(columns ...string) *HostUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &HostUpsertBulk{
+		create: _c,
+	}
+}
+
+// HostUpsertBulk is the builder for "upsert"-ing
+// a bulk of Host nodes.
+type HostUpsertBulk struct {
+	create *HostCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Host.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(host.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *HostUpsertBulk) UpdateNewValues() *HostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(host.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Host.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *HostUpsertBulk) Ignore() *HostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *HostUpsertBulk) DoNothing() *HostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the HostCreateBulk.OnConflict
+// documentation for more info.
+func (u *HostUpsertBulk) Update(set func(*HostUpsert)) *HostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&HostUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetHostID sets the "host_id" field.
+func (u *HostUpsertBulk) SetHostID(v string) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetHostID(v)
+	})
+}
+
+// UpdateHostID sets the "host_id" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateHostID() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateHostID()
+	})
+}
+
+// SetSiteID sets the "site_id" field.
+func (u *HostUpsertBulk) SetSiteID(v uuid.UUID) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetSiteID(v)
+	})
+}
+
+// UpdateSiteID sets the "site_id" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateSiteID() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateSiteID()
+	})
+}
+
+// ClearSiteID clears the value of the "site_id" field.
+func (u *HostUpsertBulk) ClearSiteID() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearSiteID()
+	})
+}
+
+// SetRuntime sets the "runtime" field.
+func (u *HostUpsertBulk) SetRuntime(v string) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetRuntime(v)
+	})
+}
+
+// UpdateRuntime sets the "runtime" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateRuntime() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateRuntime()
+	})
+}
+
+// ClearRuntime clears the value of the "runtime" field.
+func (u *HostUpsertBulk) ClearRuntime() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearRuntime()
+	})
+}
+
+// SetLastHeartbeat sets the "last_heartbeat" field.
+func (u *HostUpsertBulk) SetLastHeartbeat(v time.Time) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetLastHeartbeat(v)
+	})
+}
+
+// UpdateLastHeartbeat sets the "last_heartbeat" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateLastHeartbeat() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateLastHeartbeat()
+	})
+}
+
+// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
+func (u *HostUpsertBulk) ClearLastHeartbeat() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearLastHeartbeat()
+	})
+}
+
+// SetCPUFree sets the "cpu_free" field.
+func (u *HostUpsertBulk) SetCPUFree(v float64) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetCPUFree(v)
+	})
+}
+
+// AddCPUFree adds v to the "cpu_free" field.
+func (u *HostUpsertBulk) AddCPUFree(v float64) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.AddCPUFree(v)
+	})
+}
+
+// UpdateCPUFree sets the "cpu_free" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateCPUFree() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateCPUFree()
+	})
+}
+
+// ClearCPUFree clears the value of the "cpu_free" field.
+func (u *HostUpsertBulk) ClearCPUFree() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearCPUFree()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *HostUpsertBulk) SetStatus(v string) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateStatus() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *HostUpsertBulk) ClearStatus() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearStatus()
+	})
+}
+
+// SetHostname sets the "hostname" field.
+func (u *HostUpsertBulk) SetHostname(v string) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetHostname(v)
+	})
+}
+
+// UpdateHostname sets the "hostname" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateHostname() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateHostname()
+	})
+}
+
+// ClearHostname clears the value of the "hostname" field.
+func (u *HostUpsertBulk) ClearHostname() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearHostname()
+	})
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *HostUpsertBulk) SetIPAddress(v string) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetIPAddress(v)
+	})
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateIPAddress() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateIPAddress()
+	})
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *HostUpsertBulk) ClearIPAddress() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearIPAddress()
+	})
+}
+
+// SetEdgeURL sets the "edge_url" field.
+func (u *HostUpsertBulk) SetEdgeURL(v string) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetEdgeURL(v)
+	})
+}
+
+// UpdateEdgeURL sets the "edge_url" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateEdgeURL() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateEdgeURL()
+	})
+}
+
+// ClearEdgeURL clears the value of the "edge_url" field.
+func (u *HostUpsertBulk) ClearEdgeURL() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearEdgeURL()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *HostUpsertBulk) SetMetadata(v struct{}) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateMetadata() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *HostUpsertBulk) ClearMetadata() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearMetadata()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *HostUpsertBulk) SetCreatedAt(v time.Time) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateCreatedAt() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *HostUpsertBulk) ClearCreatedAt() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *HostUpsertBulk) SetUpdatedAt(v time.Time) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateUpdatedAt() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *HostUpsertBulk) ClearUpdatedAt() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *HostUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the HostCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for HostCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *HostUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

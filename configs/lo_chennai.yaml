@@ -1,12 +1,16 @@
 server:
   port: 9102
-  site: ef155d81-7753-4484-86e6-abc904b8c141
+  site: f95d34b2-8019-4590-a3ff-ff1e15ecc5d5
 database:
-  url: postgres://postgres:postgres@localhost:5432/orchestration?sslmode=disable 
-mode: push
+  url: postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable 
+mode: pull
 nats:
-  url: nats://localhost:4222
+  url: nats://nats:4222
+poll_interval_seconds: 20
 git:
-  path_filter: sites/chennai/desiredstate.yaml
-
+  repo: https://github.com/edge-orchestration-platform/deployments.git
+  path_filter: sites/tiruvannamalai/desiredstate.yaml
+co:
+  url: http://co:9101/api/v1
+  
 

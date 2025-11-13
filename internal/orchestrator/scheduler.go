@@ -1,11 +1,12 @@
 package orchestrator
 
 import (
-	"log"
-	"math/rand"
-	"time"
+	// "log"
+	// "math/rand"
+	// "time"
 )
 
+/*
 func PickNodes(nodes []EdgeNode, runtime, region string, max int) []EdgeNode {
 	candidates := []EdgeNode{}
 	for _, n := range nodes {
@@ -41,3 +42,4 @@ func PickNodes(nodes []EdgeNode, runtime, region string, max int) []EdgeNode {
 	}
 	return candidates
 }
+*/

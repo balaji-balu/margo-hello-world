@@ -66,6 +66,26 @@ func SiteID(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldEQ(FieldSiteID, v))
 }
 
+// Runtime applies equality check predicate on the "runtime" field. It's identical to RuntimeEQ.
+func Runtime(v string) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldRuntime, v))
+}
+
+// LastHeartbeat applies equality check predicate on the "last_heartbeat" field. It's identical to LastHeartbeatEQ.
+func LastHeartbeat(v time.Time) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldLastHeartbeat, v))
+}
+
+// CPUFree applies equality check predicate on the "cpu_free" field. It's identical to CPUFreeEQ.
+func CPUFree(v float64) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldCPUFree, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldStatus, v))
+}
+
 // Hostname applies equality check predicate on the "hostname" field. It's identical to HostnameEQ.
 func Hostname(v string) predicate.Host {
 	return predicate.Host(sql.FieldEQ(FieldHostname, v))
@@ -79,16 +99,6 @@ func IPAddress(v string) predicate.Host {
 // EdgeURL applies equality check predicate on the "edge_url" field. It's identical to EdgeURLEQ.
 func EdgeURL(v string) predicate.Host {
 	return predicate.Host(sql.FieldEQ(FieldEdgeURL, v))
-}
-
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v string) predicate.Host {
-	return predicate.Host(sql.FieldEQ(FieldStatus, v))
-}
-
-// LastHeartbeat applies equality check predicate on the "last_heartbeat" field. It's identical to LastHeartbeatEQ.
-func LastHeartbeat(v time.Time) predicate.Host {
-	return predicate.Host(sql.FieldEQ(FieldLastHeartbeat, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -194,6 +204,256 @@ func SiteIDIsNil() predicate.Host {
 // SiteIDNotNil applies the NotNil predicate on the "site_id" field.
 func SiteIDNotNil() predicate.Host {
 	return predicate.Host(sql.FieldNotNull(FieldSiteID))
+}
+
+// RuntimeEQ applies the EQ predicate on the "runtime" field.
+func RuntimeEQ(v string) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldRuntime, v))
+}
+
+// RuntimeNEQ applies the NEQ predicate on the "runtime" field.
+func RuntimeNEQ(v string) predicate.Host {
+	return predicate.Host(sql.FieldNEQ(FieldRuntime, v))
+}
+
+// RuntimeIn applies the In predicate on the "runtime" field.
+func RuntimeIn(vs ...string) predicate.Host {
+	return predicate.Host(sql.FieldIn(FieldRuntime, vs...))
+}
+
+// RuntimeNotIn applies the NotIn predicate on the "runtime" field.
+func RuntimeNotIn(vs ...string) predicate.Host {
+	return predicate.Host(sql.FieldNotIn(FieldRuntime, vs...))
+}
+
+// RuntimeGT applies the GT predicate on the "runtime" field.
+func RuntimeGT(v string) predicate.Host {
+	return predicate.Host(sql.FieldGT(FieldRuntime, v))
+}
+
+// RuntimeGTE applies the GTE predicate on the "runtime" field.
+func RuntimeGTE(v string) predicate.Host {
+	return predicate.Host(sql.FieldGTE(FieldRuntime, v))
+}
+
+// RuntimeLT applies the LT predicate on the "runtime" field.
+func RuntimeLT(v string) predicate.Host {
+	return predicate.Host(sql.FieldLT(FieldRuntime, v))
+}
+
+// RuntimeLTE applies the LTE predicate on the "runtime" field.
+func RuntimeLTE(v string) predicate.Host {
+	return predicate.Host(sql.FieldLTE(FieldRuntime, v))
+}
+
+// RuntimeContains applies the Contains predicate on the "runtime" field.
+func RuntimeContains(v string) predicate.Host {
+	return predicate.Host(sql.FieldContains(FieldRuntime, v))
+}
+
+// RuntimeHasPrefix applies the HasPrefix predicate on the "runtime" field.
+func RuntimeHasPrefix(v string) predicate.Host {
+	return predicate.Host(sql.FieldHasPrefix(FieldRuntime, v))
+}
+
+// RuntimeHasSuffix applies the HasSuffix predicate on the "runtime" field.
+func RuntimeHasSuffix(v string) predicate.Host {
+	return predicate.Host(sql.FieldHasSuffix(FieldRuntime, v))
+}
+
+// RuntimeIsNil applies the IsNil predicate on the "runtime" field.
+func RuntimeIsNil() predicate.Host {
+	return predicate.Host(sql.FieldIsNull(FieldRuntime))
+}
+
+// RuntimeNotNil applies the NotNil predicate on the "runtime" field.
+func RuntimeNotNil() predicate.Host {
+	return predicate.Host(sql.FieldNotNull(FieldRuntime))
+}
+
+// RuntimeEqualFold applies the EqualFold predicate on the "runtime" field.
+func RuntimeEqualFold(v string) predicate.Host {
+	return predicate.Host(sql.FieldEqualFold(FieldRuntime, v))
+}
+
+// RuntimeContainsFold applies the ContainsFold predicate on the "runtime" field.
+func RuntimeContainsFold(v string) predicate.Host {
+	return predicate.Host(sql.FieldContainsFold(FieldRuntime, v))
+}
+
+// LastHeartbeatEQ applies the EQ predicate on the "last_heartbeat" field.
+func LastHeartbeatEQ(v time.Time) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldLastHeartbeat, v))
+}
+
+// LastHeartbeatNEQ applies the NEQ predicate on the "last_heartbeat" field.
+func LastHeartbeatNEQ(v time.Time) predicate.Host {
+	return predicate.Host(sql.FieldNEQ(FieldLastHeartbeat, v))
+}
+
+// LastHeartbeatIn applies the In predicate on the "last_heartbeat" field.
+func LastHeartbeatIn(vs ...time.Time) predicate.Host {
+	return predicate.Host(sql.FieldIn(FieldLastHeartbeat, vs...))
+}
+
+// LastHeartbeatNotIn applies the NotIn predicate on the "last_heartbeat" field.
+func LastHeartbeatNotIn(vs ...time.Time) predicate.Host {
+	return predicate.Host(sql.FieldNotIn(FieldLastHeartbeat, vs...))
+}
+
+// LastHeartbeatGT applies the GT predicate on the "last_heartbeat" field.
+func LastHeartbeatGT(v time.Time) predicate.Host {
+	return predicate.Host(sql.FieldGT(FieldLastHeartbeat, v))
+}
+
+// LastHeartbeatGTE applies the GTE predicate on the "last_heartbeat" field.
+func LastHeartbeatGTE(v time.Time) predicate.Host {
+	return predicate.Host(sql.FieldGTE(FieldLastHeartbeat, v))
+}
+
+// LastHeartbeatLT applies the LT predicate on the "last_heartbeat" field.
+func LastHeartbeatLT(v time.Time) predicate.Host {
+	return predicate.Host(sql.FieldLT(FieldLastHeartbeat, v))
+}
+
+// LastHeartbeatLTE applies the LTE predicate on the "last_heartbeat" field.
+func LastHeartbeatLTE(v time.Time) predicate.Host {
+	return predicate.Host(sql.FieldLTE(FieldLastHeartbeat, v))
+}
+
+// LastHeartbeatIsNil applies the IsNil predicate on the "last_heartbeat" field.
+func LastHeartbeatIsNil() predicate.Host {
+	return predicate.Host(sql.FieldIsNull(FieldLastHeartbeat))
+}
+
+// LastHeartbeatNotNil applies the NotNil predicate on the "last_heartbeat" field.
+func LastHeartbeatNotNil() predicate.Host {
+	return predicate.Host(sql.FieldNotNull(FieldLastHeartbeat))
+}
+
+// CPUFreeEQ applies the EQ predicate on the "cpu_free" field.
+func CPUFreeEQ(v float64) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldCPUFree, v))
+}
+
+// CPUFreeNEQ applies the NEQ predicate on the "cpu_free" field.
+func CPUFreeNEQ(v float64) predicate.Host {
+	return predicate.Host(sql.FieldNEQ(FieldCPUFree, v))
+}
+
+// CPUFreeIn applies the In predicate on the "cpu_free" field.
+func CPUFreeIn(vs ...float64) predicate.Host {
+	return predicate.Host(sql.FieldIn(FieldCPUFree, vs...))
+}
+
+// CPUFreeNotIn applies the NotIn predicate on the "cpu_free" field.
+func CPUFreeNotIn(vs ...float64) predicate.Host {
+	return predicate.Host(sql.FieldNotIn(FieldCPUFree, vs...))
+}
+
+// CPUFreeGT applies the GT predicate on the "cpu_free" field.
+func CPUFreeGT(v float64) predicate.Host {
+	return predicate.Host(sql.FieldGT(FieldCPUFree, v))
+}
+
+// CPUFreeGTE applies the GTE predicate on the "cpu_free" field.
+func CPUFreeGTE(v float64) predicate.Host {
+	return predicate.Host(sql.FieldGTE(FieldCPUFree, v))
+}
+
+// CPUFreeLT applies the LT predicate on the "cpu_free" field.
+func CPUFreeLT(v float64) predicate.Host {
+	return predicate.Host(sql.FieldLT(FieldCPUFree, v))
+}
+
+// CPUFreeLTE applies the LTE predicate on the "cpu_free" field.
+func CPUFreeLTE(v float64) predicate.Host {
+	return predicate.Host(sql.FieldLTE(FieldCPUFree, v))
+}
+
+// CPUFreeIsNil applies the IsNil predicate on the "cpu_free" field.
+func CPUFreeIsNil() predicate.Host {
+	return predicate.Host(sql.FieldIsNull(FieldCPUFree))
+}
+
+// CPUFreeNotNil applies the NotNil predicate on the "cpu_free" field.
+func CPUFreeNotNil() predicate.Host {
+	return predicate.Host(sql.FieldNotNull(FieldCPUFree))
+}
+
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v string) predicate.Host {
+	return predicate.Host(sql.FieldEQ(FieldStatus, v))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v string) predicate.Host {
+	return predicate.Host(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...string) predicate.Host {
+	return predicate.Host(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...string) predicate.Host {
+	return predicate.Host(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.Host {
+	return predicate.Host(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.Host {
+	return predicate.Host(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.Host {
+	return predicate.Host(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.Host {
+	return predicate.Host(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.Host {
+	return predicate.Host(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.Host {
+	return predicate.Host(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.Host {
+	return predicate.Host(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusIsNil applies the IsNil predicate on the "status" field.
+func StatusIsNil() predicate.Host {
+	return predicate.Host(sql.FieldIsNull(FieldStatus))
+}
+
+// StatusNotNil applies the NotNil predicate on the "status" field.
+func StatusNotNil() predicate.Host {
+	return predicate.Host(sql.FieldNotNull(FieldStatus))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.Host {
+	return predicate.Host(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.Host {
+	return predicate.Host(sql.FieldContainsFold(FieldStatus, v))
 }
 
 // HostnameEQ applies the EQ predicate on the "hostname" field.
@@ -419,131 +679,6 @@ func EdgeURLEqualFold(v string) predicate.Host {
 // EdgeURLContainsFold applies the ContainsFold predicate on the "edge_url" field.
 func EdgeURLContainsFold(v string) predicate.Host {
 	return predicate.Host(sql.FieldContainsFold(FieldEdgeURL, v))
-}
-
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v string) predicate.Host {
-	return predicate.Host(sql.FieldEQ(FieldStatus, v))
-}
-
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v string) predicate.Host {
-	return predicate.Host(sql.FieldNEQ(FieldStatus, v))
-}
-
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...string) predicate.Host {
-	return predicate.Host(sql.FieldIn(FieldStatus, vs...))
-}
-
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...string) predicate.Host {
-	return predicate.Host(sql.FieldNotIn(FieldStatus, vs...))
-}
-
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v string) predicate.Host {
-	return predicate.Host(sql.FieldGT(FieldStatus, v))
-}
-
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v string) predicate.Host {
-	return predicate.Host(sql.FieldGTE(FieldStatus, v))
-}
-
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v string) predicate.Host {
-	return predicate.Host(sql.FieldLT(FieldStatus, v))
-}
-
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v string) predicate.Host {
-	return predicate.Host(sql.FieldLTE(FieldStatus, v))
-}
-
-// StatusContains applies the Contains predicate on the "status" field.
-func StatusContains(v string) predicate.Host {
-	return predicate.Host(sql.FieldContains(FieldStatus, v))
-}
-
-// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
-func StatusHasPrefix(v string) predicate.Host {
-	return predicate.Host(sql.FieldHasPrefix(FieldStatus, v))
-}
-
-// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
-func StatusHasSuffix(v string) predicate.Host {
-	return predicate.Host(sql.FieldHasSuffix(FieldStatus, v))
-}
-
-// StatusIsNil applies the IsNil predicate on the "status" field.
-func StatusIsNil() predicate.Host {
-	return predicate.Host(sql.FieldIsNull(FieldStatus))
-}
-
-// StatusNotNil applies the NotNil predicate on the "status" field.
-func StatusNotNil() predicate.Host {
-	return predicate.Host(sql.FieldNotNull(FieldStatus))
-}
-
-// StatusEqualFold applies the EqualFold predicate on the "status" field.
-func StatusEqualFold(v string) predicate.Host {
-	return predicate.Host(sql.FieldEqualFold(FieldStatus, v))
-}
-
-// StatusContainsFold applies the ContainsFold predicate on the "status" field.
-func StatusContainsFold(v string) predicate.Host {
-	return predicate.Host(sql.FieldContainsFold(FieldStatus, v))
-}
-
-// LastHeartbeatEQ applies the EQ predicate on the "last_heartbeat" field.
-func LastHeartbeatEQ(v time.Time) predicate.Host {
-	return predicate.Host(sql.FieldEQ(FieldLastHeartbeat, v))
-}
-
-// LastHeartbeatNEQ applies the NEQ predicate on the "last_heartbeat" field.
-func LastHeartbeatNEQ(v time.Time) predicate.Host {
-	return predicate.Host(sql.FieldNEQ(FieldLastHeartbeat, v))
-}
-
-// LastHeartbeatIn applies the In predicate on the "last_heartbeat" field.
-func LastHeartbeatIn(vs ...time.Time) predicate.Host {
-	return predicate.Host(sql.FieldIn(FieldLastHeartbeat, vs...))
-}
-
-// LastHeartbeatNotIn applies the NotIn predicate on the "last_heartbeat" field.
-func LastHeartbeatNotIn(vs ...time.Time) predicate.Host {
-	return predicate.Host(sql.FieldNotIn(FieldLastHeartbeat, vs...))
-}
-
-// LastHeartbeatGT applies the GT predicate on the "last_heartbeat" field.
-func LastHeartbeatGT(v time.Time) predicate.Host {
-	return predicate.Host(sql.FieldGT(FieldLastHeartbeat, v))
-}
-
-// LastHeartbeatGTE applies the GTE predicate on the "last_heartbeat" field.
-func LastHeartbeatGTE(v time.Time) predicate.Host {
-	return predicate.Host(sql.FieldGTE(FieldLastHeartbeat, v))
-}
-
-// LastHeartbeatLT applies the LT predicate on the "last_heartbeat" field.
-func LastHeartbeatLT(v time.Time) predicate.Host {
-	return predicate.Host(sql.FieldLT(FieldLastHeartbeat, v))
-}
-
-// LastHeartbeatLTE applies the LTE predicate on the "last_heartbeat" field.
-func LastHeartbeatLTE(v time.Time) predicate.Host {
-	return predicate.Host(sql.FieldLTE(FieldLastHeartbeat, v))
-}
-
-// LastHeartbeatIsNil applies the IsNil predicate on the "last_heartbeat" field.
-func LastHeartbeatIsNil() predicate.Host {
-	return predicate.Host(sql.FieldIsNull(FieldLastHeartbeat))
-}
-
-// LastHeartbeatNotNil applies the NotNil predicate on the "last_heartbeat" field.
-func LastHeartbeatNotNil() predicate.Host {
-	return predicate.Host(sql.FieldNotNull(FieldLastHeartbeat))
 }
 
 // MetadataIsNil applies the IsNil predicate on the "metadata" field.

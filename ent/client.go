@@ -18,7 +18,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
+	"github.com/balaji-balu/margo-hello-world/ent/deploymentcomponentstatus"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
+	"github.com/balaji-balu/margo-hello-world/ent/deploymentstatus"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
 	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/ent/site"
@@ -34,8 +36,12 @@ type Client struct {
 	ApplicationDesc *ApplicationDescClient
 	// Component is the client for interacting with the Component builders.
 	Component *ComponentClient
+	// DeploymentComponentStatus is the client for interacting with the DeploymentComponentStatus builders.
+	DeploymentComponentStatus *DeploymentComponentStatusClient
 	// DeploymentProfile is the client for interacting with the DeploymentProfile builders.
 	DeploymentProfile *DeploymentProfileClient
+	// DeploymentStatus is the client for interacting with the DeploymentStatus builders.
+	DeploymentStatus *DeploymentStatusClient
 	// Host is the client for interacting with the Host builders.
 	Host *HostClient
 	// Orchestrator is the client for interacting with the Orchestrator builders.
@@ -57,7 +63,9 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.ApplicationDesc = NewApplicationDescClient(c.config)
 	c.Component = NewComponentClient(c.config)
+	c.DeploymentComponentStatus = NewDeploymentComponentStatusClient(c.config)
 	c.DeploymentProfile = NewDeploymentProfileClient(c.config)
+	c.DeploymentStatus = NewDeploymentStatusClient(c.config)
 	c.Host = NewHostClient(c.config)
 	c.Orchestrator = NewOrchestratorClient(c.config)
 	c.Site = NewSiteClient(c.config)
@@ -152,15 +160,17 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:               ctx,
-		config:            cfg,
-		ApplicationDesc:   NewApplicationDescClient(cfg),
-		Component:         NewComponentClient(cfg),
-		DeploymentProfile: NewDeploymentProfileClient(cfg),
-		Host:              NewHostClient(cfg),
-		Orchestrator:      NewOrchestratorClient(cfg),
-		Site:              NewSiteClient(cfg),
-		User:              NewUserClient(cfg),
+		ctx:                       ctx,
+		config:                    cfg,
+		ApplicationDesc:           NewApplicationDescClient(cfg),
+		Component:                 NewComponentClient(cfg),
+		DeploymentComponentStatus: NewDeploymentComponentStatusClient(cfg),
+		DeploymentProfile:         NewDeploymentProfileClient(cfg),
+		DeploymentStatus:          NewDeploymentStatusClient(cfg),
+		Host:                      NewHostClient(cfg),
+		Orchestrator:              NewOrchestratorClient(cfg),
+		Site:                      NewSiteClient(cfg),
+		User:                      NewUserClient(cfg),
 	}, nil
 }
 
@@ -178,15 +188,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:               ctx,
-		config:            cfg,
-		ApplicationDesc:   NewApplicationDescClient(cfg),
-		Component:         NewComponentClient(cfg),
-		DeploymentProfile: NewDeploymentProfileClient(cfg),
-		Host:              NewHostClient(cfg),
-		Orchestrator:      NewOrchestratorClient(cfg),
-		Site:              NewSiteClient(cfg),
-		User:              NewUserClient(cfg),
+		ctx:                       ctx,
+		config:                    cfg,
+		ApplicationDesc:           NewApplicationDescClient(cfg),
+		Component:                 NewComponentClient(cfg),
+		DeploymentComponentStatus: NewDeploymentComponentStatusClient(cfg),
+		DeploymentProfile:         NewDeploymentProfileClient(cfg),
+		DeploymentStatus:          NewDeploymentStatusClient(cfg),
+		Host:                      NewHostClient(cfg),
+		Orchestrator:              NewOrchestratorClient(cfg),
+		Site:                      NewSiteClient(cfg),
+		User:                      NewUserClient(cfg),
 	}, nil
 }
 
@@ -216,8 +228,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.ApplicationDesc, c.Component, c.DeploymentProfile, c.Host, c.Orchestrator,
-		c.Site, c.User,
+		c.ApplicationDesc, c.Component, c.DeploymentComponentStatus,
+		c.DeploymentProfile, c.DeploymentStatus, c.Host, c.Orchestrator, c.Site,
+		c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -227,8 +240,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.ApplicationDesc, c.Component, c.DeploymentProfile, c.Host, c.Orchestrator,
-		c.Site, c.User,
+		c.ApplicationDesc, c.Component, c.DeploymentComponentStatus,
+		c.DeploymentProfile, c.DeploymentStatus, c.Host, c.Orchestrator, c.Site,
+		c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -241,8 +255,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ApplicationDesc.mutate(ctx, m)
 	case *ComponentMutation:
 		return c.Component.mutate(ctx, m)
+	case *DeploymentComponentStatusMutation:
+		return c.DeploymentComponentStatus.mutate(ctx, m)
 	case *DeploymentProfileMutation:
 		return c.DeploymentProfile.mutate(ctx, m)
+	case *DeploymentStatusMutation:
+		return c.DeploymentStatus.mutate(ctx, m)
 	case *HostMutation:
 		return c.Host.mutate(ctx, m)
 	case *OrchestratorMutation:
@@ -554,6 +572,155 @@ func (c *ComponentClient) mutate(ctx context.Context, m *ComponentMutation) (Val
 	}
 }
 
+// DeploymentComponentStatusClient is a client for the DeploymentComponentStatus schema.
+type DeploymentComponentStatusClient struct {
+	config
+}
+
+// NewDeploymentComponentStatusClient returns a client for the DeploymentComponentStatus from the given config.
+func NewDeploymentComponentStatusClient(c config) *DeploymentComponentStatusClient {
+	return &DeploymentComponentStatusClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `deploymentcomponentstatus.Hooks(f(g(h())))`.
+func (c *DeploymentComponentStatusClient) Use(hooks ...Hook) {
+	c.hooks.DeploymentComponentStatus = append(c.hooks.DeploymentComponentStatus, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `deploymentcomponentstatus.Intercept(f(g(h())))`.
+func (c *DeploymentComponentStatusClient) Intercept(interceptors ...Interceptor) {
+	c.inters.DeploymentComponentStatus = append(c.inters.DeploymentComponentStatus, interceptors...)
+}
+
+// Create returns a builder for creating a DeploymentComponentStatus entity.
+func (c *DeploymentComponentStatusClient) Create() *DeploymentComponentStatusCreate {
+	mutation := newDeploymentComponentStatusMutation(c.config, OpCreate)
+	return &DeploymentComponentStatusCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of DeploymentComponentStatus entities.
+func (c *DeploymentComponentStatusClient) CreateBulk(builders ...*DeploymentComponentStatusCreate) *DeploymentComponentStatusCreateBulk {
+	return &DeploymentComponentStatusCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DeploymentComponentStatusClient) MapCreateBulk(slice any, setFunc func(*DeploymentComponentStatusCreate, int)) *DeploymentComponentStatusCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DeploymentComponentStatusCreateBulk{err: fmt.Errorf("calling to DeploymentComponentStatusClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DeploymentComponentStatusCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DeploymentComponentStatusCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for DeploymentComponentStatus.
+func (c *DeploymentComponentStatusClient) Update() *DeploymentComponentStatusUpdate {
+	mutation := newDeploymentComponentStatusMutation(c.config, OpUpdate)
+	return &DeploymentComponentStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DeploymentComponentStatusClient) UpdateOne(_m *DeploymentComponentStatus) *DeploymentComponentStatusUpdateOne {
+	mutation := newDeploymentComponentStatusMutation(c.config, OpUpdateOne, withDeploymentComponentStatus(_m))
+	return &DeploymentComponentStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DeploymentComponentStatusClient) UpdateOneID(id uuid.UUID) *DeploymentComponentStatusUpdateOne {
+	mutation := newDeploymentComponentStatusMutation(c.config, OpUpdateOne, withDeploymentComponentStatusID(id))
+	return &DeploymentComponentStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for DeploymentComponentStatus.
+func (c *DeploymentComponentStatusClient) Delete() *DeploymentComponentStatusDelete {
+	mutation := newDeploymentComponentStatusMutation(c.config, OpDelete)
+	return &DeploymentComponentStatusDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DeploymentComponentStatusClient) DeleteOne(_m *DeploymentComponentStatus) *DeploymentComponentStatusDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DeploymentComponentStatusClient) DeleteOneID(id uuid.UUID) *DeploymentComponentStatusDeleteOne {
+	builder := c.Delete().Where(deploymentcomponentstatus.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DeploymentComponentStatusDeleteOne{builder}
+}
+
+// Query returns a query builder for DeploymentComponentStatus.
+func (c *DeploymentComponentStatusClient) Query() *DeploymentComponentStatusQuery {
+	return &DeploymentComponentStatusQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDeploymentComponentStatus},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a DeploymentComponentStatus entity by its id.
+func (c *DeploymentComponentStatusClient) Get(ctx context.Context, id uuid.UUID) (*DeploymentComponentStatus, error) {
+	return c.Query().Where(deploymentcomponentstatus.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DeploymentComponentStatusClient) GetX(ctx context.Context, id uuid.UUID) *DeploymentComponentStatus {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryDeployment queries the deployment edge of a DeploymentComponentStatus.
+func (c *DeploymentComponentStatusClient) QueryDeployment(_m *DeploymentComponentStatus) *DeploymentStatusQuery {
+	query := (&DeploymentStatusClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(deploymentcomponentstatus.Table, deploymentcomponentstatus.FieldID, id),
+			sqlgraph.To(deploymentstatus.Table, deploymentstatus.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, deploymentcomponentstatus.DeploymentTable, deploymentcomponentstatus.DeploymentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DeploymentComponentStatusClient) Hooks() []Hook {
+	return c.hooks.DeploymentComponentStatus
+}
+
+// Interceptors returns the client interceptors.
+func (c *DeploymentComponentStatusClient) Interceptors() []Interceptor {
+	return c.inters.DeploymentComponentStatus
+}
+
+func (c *DeploymentComponentStatusClient) mutate(ctx context.Context, m *DeploymentComponentStatusMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DeploymentComponentStatusCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DeploymentComponentStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DeploymentComponentStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DeploymentComponentStatusDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown DeploymentComponentStatus mutation op: %q", m.Op())
+	}
+}
+
 // DeploymentProfileClient is a client for the DeploymentProfile schema.
 type DeploymentProfileClient struct {
 	config
@@ -716,6 +883,155 @@ func (c *DeploymentProfileClient) mutate(ctx context.Context, m *DeploymentProfi
 		return (&DeploymentProfileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown DeploymentProfile mutation op: %q", m.Op())
+	}
+}
+
+// DeploymentStatusClient is a client for the DeploymentStatus schema.
+type DeploymentStatusClient struct {
+	config
+}
+
+// NewDeploymentStatusClient returns a client for the DeploymentStatus from the given config.
+func NewDeploymentStatusClient(c config) *DeploymentStatusClient {
+	return &DeploymentStatusClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `deploymentstatus.Hooks(f(g(h())))`.
+func (c *DeploymentStatusClient) Use(hooks ...Hook) {
+	c.hooks.DeploymentStatus = append(c.hooks.DeploymentStatus, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `deploymentstatus.Intercept(f(g(h())))`.
+func (c *DeploymentStatusClient) Intercept(interceptors ...Interceptor) {
+	c.inters.DeploymentStatus = append(c.inters.DeploymentStatus, interceptors...)
+}
+
+// Create returns a builder for creating a DeploymentStatus entity.
+func (c *DeploymentStatusClient) Create() *DeploymentStatusCreate {
+	mutation := newDeploymentStatusMutation(c.config, OpCreate)
+	return &DeploymentStatusCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of DeploymentStatus entities.
+func (c *DeploymentStatusClient) CreateBulk(builders ...*DeploymentStatusCreate) *DeploymentStatusCreateBulk {
+	return &DeploymentStatusCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DeploymentStatusClient) MapCreateBulk(slice any, setFunc func(*DeploymentStatusCreate, int)) *DeploymentStatusCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DeploymentStatusCreateBulk{err: fmt.Errorf("calling to DeploymentStatusClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DeploymentStatusCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DeploymentStatusCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for DeploymentStatus.
+func (c *DeploymentStatusClient) Update() *DeploymentStatusUpdate {
+	mutation := newDeploymentStatusMutation(c.config, OpUpdate)
+	return &DeploymentStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DeploymentStatusClient) UpdateOne(_m *DeploymentStatus) *DeploymentStatusUpdateOne {
+	mutation := newDeploymentStatusMutation(c.config, OpUpdateOne, withDeploymentStatus(_m))
+	return &DeploymentStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DeploymentStatusClient) UpdateOneID(id uuid.UUID) *DeploymentStatusUpdateOne {
+	mutation := newDeploymentStatusMutation(c.config, OpUpdateOne, withDeploymentStatusID(id))
+	return &DeploymentStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for DeploymentStatus.
+func (c *DeploymentStatusClient) Delete() *DeploymentStatusDelete {
+	mutation := newDeploymentStatusMutation(c.config, OpDelete)
+	return &DeploymentStatusDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DeploymentStatusClient) DeleteOne(_m *DeploymentStatus) *DeploymentStatusDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DeploymentStatusClient) DeleteOneID(id uuid.UUID) *DeploymentStatusDeleteOne {
+	builder := c.Delete().Where(deploymentstatus.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DeploymentStatusDeleteOne{builder}
+}
+
+// Query returns a query builder for DeploymentStatus.
+func (c *DeploymentStatusClient) Query() *DeploymentStatusQuery {
+	return &DeploymentStatusQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDeploymentStatus},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a DeploymentStatus entity by its id.
+func (c *DeploymentStatusClient) Get(ctx context.Context, id uuid.UUID) (*DeploymentStatus, error) {
+	return c.Query().Where(deploymentstatus.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DeploymentStatusClient) GetX(ctx context.Context, id uuid.UUID) *DeploymentStatus {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryComponents queries the components edge of a DeploymentStatus.
+func (c *DeploymentStatusClient) QueryComponents(_m *DeploymentStatus) *DeploymentComponentStatusQuery {
+	query := (&DeploymentComponentStatusClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(deploymentstatus.Table, deploymentstatus.FieldID, id),
+			sqlgraph.To(deploymentcomponentstatus.Table, deploymentcomponentstatus.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, deploymentstatus.ComponentsTable, deploymentstatus.ComponentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DeploymentStatusClient) Hooks() []Hook {
+	return c.hooks.DeploymentStatus
+}
+
+// Interceptors returns the client interceptors.
+func (c *DeploymentStatusClient) Interceptors() []Interceptor {
+	return c.inters.DeploymentStatus
+}
+
+func (c *DeploymentStatusClient) mutate(ctx context.Context, m *DeploymentStatusMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DeploymentStatusCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DeploymentStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DeploymentStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DeploymentStatusDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown DeploymentStatus mutation op: %q", m.Op())
 	}
 }
 
@@ -1318,11 +1634,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ApplicationDesc, Component, DeploymentProfile, Host, Orchestrator, Site,
-		User []ent.Hook
+		ApplicationDesc, Component, DeploymentComponentStatus, DeploymentProfile,
+		DeploymentStatus, Host, Orchestrator, Site, User []ent.Hook
 	}
 	inters struct {
-		ApplicationDesc, Component, DeploymentProfile, Host, Orchestrator, Site,
-		User []ent.Interceptor
+		ApplicationDesc, Component, DeploymentComponentStatus, DeploymentProfile,
+		DeploymentStatus, Host, Orchestrator, Site, User []ent.Interceptor
 	}
 )

@@ -68,6 +68,14 @@ CREATE TABLE "orchestrator" (
   "updated_at" timestamptz DEFAULT (now())
 );
 
+CREATE TABLE "deployment_status" {
+  "deployment_id" varchar,
+  "status" varchar
+  "components"
+  "created_at" timestamptz DEFAULT (now()),
+  "updated_at" timestamptz DEFAULT (now()) 
+}
+
 ALTER TABLE "deployment_profile" ADD FOREIGN KEY ("app_id") REFERENCES "application_desc" ("app_id");
 
 ALTER TABLE "component" ADD FOREIGN KEY ("deployment_profile_id") REFERENCES "deployment_profile" ("id");

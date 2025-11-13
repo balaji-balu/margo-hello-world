@@ -64,6 +64,93 @@ func (_u *HostUpdate) ClearSiteID() *HostUpdate {
 	return _u
 }
 
+// SetRuntime sets the "runtime" field.
+func (_u *HostUpdate) SetRuntime(v string) *HostUpdate {
+	_u.mutation.SetRuntime(v)
+	return _u
+}
+
+// SetNillableRuntime sets the "runtime" field if the given value is not nil.
+func (_u *HostUpdate) SetNillableRuntime(v *string) *HostUpdate {
+	if v != nil {
+		_u.SetRuntime(*v)
+	}
+	return _u
+}
+
+// ClearRuntime clears the value of the "runtime" field.
+func (_u *HostUpdate) ClearRuntime() *HostUpdate {
+	_u.mutation.ClearRuntime()
+	return _u
+}
+
+// SetLastHeartbeat sets the "last_heartbeat" field.
+func (_u *HostUpdate) SetLastHeartbeat(v time.Time) *HostUpdate {
+	_u.mutation.SetLastHeartbeat(v)
+	return _u
+}
+
+// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
+func (_u *HostUpdate) SetNillableLastHeartbeat(v *time.Time) *HostUpdate {
+	if v != nil {
+		_u.SetLastHeartbeat(*v)
+	}
+	return _u
+}
+
+// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
+func (_u *HostUpdate) ClearLastHeartbeat() *HostUpdate {
+	_u.mutation.ClearLastHeartbeat()
+	return _u
+}
+
+// SetCPUFree sets the "cpu_free" field.
+func (_u *HostUpdate) SetCPUFree(v float64) *HostUpdate {
+	_u.mutation.ResetCPUFree()
+	_u.mutation.SetCPUFree(v)
+	return _u
+}
+
+// SetNillableCPUFree sets the "cpu_free" field if the given value is not nil.
+func (_u *HostUpdate) SetNillableCPUFree(v *float64) *HostUpdate {
+	if v != nil {
+		_u.SetCPUFree(*v)
+	}
+	return _u
+}
+
+// AddCPUFree adds value to the "cpu_free" field.
+func (_u *HostUpdate) AddCPUFree(v float64) *HostUpdate {
+	_u.mutation.AddCPUFree(v)
+	return _u
+}
+
+// ClearCPUFree clears the value of the "cpu_free" field.
+func (_u *HostUpdate) ClearCPUFree() *HostUpdate {
+	_u.mutation.ClearCPUFree()
+	return _u
+}
+
+// SetStatus sets the "status" field.
+func (_u *HostUpdate) SetStatus(v string) *HostUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *HostUpdate) SetNillableStatus(v *string) *HostUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// ClearStatus clears the value of the "status" field.
+func (_u *HostUpdate) ClearStatus() *HostUpdate {
+	_u.mutation.ClearStatus()
+	return _u
+}
+
 // SetHostname sets the "hostname" field.
 func (_u *HostUpdate) SetHostname(v string) *HostUpdate {
 	_u.mutation.SetHostname(v)
@@ -121,46 +208,6 @@ func (_u *HostUpdate) SetNillableEdgeURL(v *string) *HostUpdate {
 // ClearEdgeURL clears the value of the "edge_url" field.
 func (_u *HostUpdate) ClearEdgeURL() *HostUpdate {
 	_u.mutation.ClearEdgeURL()
-	return _u
-}
-
-// SetStatus sets the "status" field.
-func (_u *HostUpdate) SetStatus(v string) *HostUpdate {
-	_u.mutation.SetStatus(v)
-	return _u
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (_u *HostUpdate) SetNillableStatus(v *string) *HostUpdate {
-	if v != nil {
-		_u.SetStatus(*v)
-	}
-	return _u
-}
-
-// ClearStatus clears the value of the "status" field.
-func (_u *HostUpdate) ClearStatus() *HostUpdate {
-	_u.mutation.ClearStatus()
-	return _u
-}
-
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (_u *HostUpdate) SetLastHeartbeat(v time.Time) *HostUpdate {
-	_u.mutation.SetLastHeartbeat(v)
-	return _u
-}
-
-// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
-func (_u *HostUpdate) SetNillableLastHeartbeat(v *time.Time) *HostUpdate {
-	if v != nil {
-		_u.SetLastHeartbeat(*v)
-	}
-	return _u
-}
-
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (_u *HostUpdate) ClearLastHeartbeat() *HostUpdate {
-	_u.mutation.ClearLastHeartbeat()
 	return _u
 }
 
@@ -279,6 +326,33 @@ func (_u *HostUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.HostID(); ok {
 		_spec.SetField(host.FieldHostID, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Runtime(); ok {
+		_spec.SetField(host.FieldRuntime, field.TypeString, value)
+	}
+	if _u.mutation.RuntimeCleared() {
+		_spec.ClearField(host.FieldRuntime, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastHeartbeat(); ok {
+		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
+	}
+	if _u.mutation.LastHeartbeatCleared() {
+		_spec.ClearField(host.FieldLastHeartbeat, field.TypeTime)
+	}
+	if value, ok := _u.mutation.CPUFree(); ok {
+		_spec.SetField(host.FieldCPUFree, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedCPUFree(); ok {
+		_spec.AddField(host.FieldCPUFree, field.TypeFloat64, value)
+	}
+	if _u.mutation.CPUFreeCleared() {
+		_spec.ClearField(host.FieldCPUFree, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(host.FieldStatus, field.TypeString, value)
+	}
+	if _u.mutation.StatusCleared() {
+		_spec.ClearField(host.FieldStatus, field.TypeString)
+	}
 	if value, ok := _u.mutation.Hostname(); ok {
 		_spec.SetField(host.FieldHostname, field.TypeString, value)
 	}
@@ -296,18 +370,6 @@ func (_u *HostUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.EdgeURLCleared() {
 		_spec.ClearField(host.FieldEdgeURL, field.TypeString)
-	}
-	if value, ok := _u.mutation.Status(); ok {
-		_spec.SetField(host.FieldStatus, field.TypeString, value)
-	}
-	if _u.mutation.StatusCleared() {
-		_spec.ClearField(host.FieldStatus, field.TypeString)
-	}
-	if value, ok := _u.mutation.LastHeartbeat(); ok {
-		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
-	}
-	if _u.mutation.LastHeartbeatCleared() {
-		_spec.ClearField(host.FieldLastHeartbeat, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(host.FieldMetadata, field.TypeJSON, value)
@@ -410,6 +472,93 @@ func (_u *HostUpdateOne) ClearSiteID() *HostUpdateOne {
 	return _u
 }
 
+// SetRuntime sets the "runtime" field.
+func (_u *HostUpdateOne) SetRuntime(v string) *HostUpdateOne {
+	_u.mutation.SetRuntime(v)
+	return _u
+}
+
+// SetNillableRuntime sets the "runtime" field if the given value is not nil.
+func (_u *HostUpdateOne) SetNillableRuntime(v *string) *HostUpdateOne {
+	if v != nil {
+		_u.SetRuntime(*v)
+	}
+	return _u
+}
+
+// ClearRuntime clears the value of the "runtime" field.
+func (_u *HostUpdateOne) ClearRuntime() *HostUpdateOne {
+	_u.mutation.ClearRuntime()
+	return _u
+}
+
+// SetLastHeartbeat sets the "last_heartbeat" field.
+func (_u *HostUpdateOne) SetLastHeartbeat(v time.Time) *HostUpdateOne {
+	_u.mutation.SetLastHeartbeat(v)
+	return _u
+}
+
+// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
+func (_u *HostUpdateOne) SetNillableLastHeartbeat(v *time.Time) *HostUpdateOne {
+	if v != nil {
+		_u.SetLastHeartbeat(*v)
+	}
+	return _u
+}
+
+// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
+func (_u *HostUpdateOne) ClearLastHeartbeat() *HostUpdateOne {
+	_u.mutation.ClearLastHeartbeat()
+	return _u
+}
+
+// SetCPUFree sets the "cpu_free" field.
+func (_u *HostUpdateOne) SetCPUFree(v float64) *HostUpdateOne {
+	_u.mutation.ResetCPUFree()
+	_u.mutation.SetCPUFree(v)
+	return _u
+}
+
+// SetNillableCPUFree sets the "cpu_free" field if the given value is not nil.
+func (_u *HostUpdateOne) SetNillableCPUFree(v *float64) *HostUpdateOne {
+	if v != nil {
+		_u.SetCPUFree(*v)
+	}
+	return _u
+}
+
+// AddCPUFree adds value to the "cpu_free" field.
+func (_u *HostUpdateOne) AddCPUFree(v float64) *HostUpdateOne {
+	_u.mutation.AddCPUFree(v)
+	return _u
+}
+
+// ClearCPUFree clears the value of the "cpu_free" field.
+func (_u *HostUpdateOne) ClearCPUFree() *HostUpdateOne {
+	_u.mutation.ClearCPUFree()
+	return _u
+}
+
+// SetStatus sets the "status" field.
+func (_u *HostUpdateOne) SetStatus(v string) *HostUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *HostUpdateOne) SetNillableStatus(v *string) *HostUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// ClearStatus clears the value of the "status" field.
+func (_u *HostUpdateOne) ClearStatus() *HostUpdateOne {
+	_u.mutation.ClearStatus()
+	return _u
+}
+
 // SetHostname sets the "hostname" field.
 func (_u *HostUpdateOne) SetHostname(v string) *HostUpdateOne {
 	_u.mutation.SetHostname(v)
@@ -467,46 +616,6 @@ func (_u *HostUpdateOne) SetNillableEdgeURL(v *string) *HostUpdateOne {
 // ClearEdgeURL clears the value of the "edge_url" field.
 func (_u *HostUpdateOne) ClearEdgeURL() *HostUpdateOne {
 	_u.mutation.ClearEdgeURL()
-	return _u
-}
-
-// SetStatus sets the "status" field.
-func (_u *HostUpdateOne) SetStatus(v string) *HostUpdateOne {
-	_u.mutation.SetStatus(v)
-	return _u
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (_u *HostUpdateOne) SetNillableStatus(v *string) *HostUpdateOne {
-	if v != nil {
-		_u.SetStatus(*v)
-	}
-	return _u
-}
-
-// ClearStatus clears the value of the "status" field.
-func (_u *HostUpdateOne) ClearStatus() *HostUpdateOne {
-	_u.mutation.ClearStatus()
-	return _u
-}
-
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (_u *HostUpdateOne) SetLastHeartbeat(v time.Time) *HostUpdateOne {
-	_u.mutation.SetLastHeartbeat(v)
-	return _u
-}
-
-// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
-func (_u *HostUpdateOne) SetNillableLastHeartbeat(v *time.Time) *HostUpdateOne {
-	if v != nil {
-		_u.SetLastHeartbeat(*v)
-	}
-	return _u
-}
-
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (_u *HostUpdateOne) ClearLastHeartbeat() *HostUpdateOne {
-	_u.mutation.ClearLastHeartbeat()
 	return _u
 }
 
@@ -655,6 +764,33 @@ func (_u *HostUpdateOne) sqlSave(ctx context.Context) (_node *Host, err error) {
 	if value, ok := _u.mutation.HostID(); ok {
 		_spec.SetField(host.FieldHostID, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Runtime(); ok {
+		_spec.SetField(host.FieldRuntime, field.TypeString, value)
+	}
+	if _u.mutation.RuntimeCleared() {
+		_spec.ClearField(host.FieldRuntime, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastHeartbeat(); ok {
+		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
+	}
+	if _u.mutation.LastHeartbeatCleared() {
+		_spec.ClearField(host.FieldLastHeartbeat, field.TypeTime)
+	}
+	if value, ok := _u.mutation.CPUFree(); ok {
+		_spec.SetField(host.FieldCPUFree, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedCPUFree(); ok {
+		_spec.AddField(host.FieldCPUFree, field.TypeFloat64, value)
+	}
+	if _u.mutation.CPUFreeCleared() {
+		_spec.ClearField(host.FieldCPUFree, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(host.FieldStatus, field.TypeString, value)
+	}
+	if _u.mutation.StatusCleared() {
+		_spec.ClearField(host.FieldStatus, field.TypeString)
+	}
 	if value, ok := _u.mutation.Hostname(); ok {
 		_spec.SetField(host.FieldHostname, field.TypeString, value)
 	}
@@ -672,18 +808,6 @@ func (_u *HostUpdateOne) sqlSave(ctx context.Context) (_node *Host, err error) {
 	}
 	if _u.mutation.EdgeURLCleared() {
 		_spec.ClearField(host.FieldEdgeURL, field.TypeString)
-	}
-	if value, ok := _u.mutation.Status(); ok {
-		_spec.SetField(host.FieldStatus, field.TypeString, value)
-	}
-	if _u.mutation.StatusCleared() {
-		_spec.ClearField(host.FieldStatus, field.TypeString)
-	}
-	if value, ok := _u.mutation.LastHeartbeat(); ok {
-		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
-	}
-	if _u.mutation.LastHeartbeatCleared() {
-		_spec.ClearField(host.FieldLastHeartbeat, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(host.FieldMetadata, field.TypeJSON, value)

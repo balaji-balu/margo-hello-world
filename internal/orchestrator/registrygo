@@ -7,6 +7,7 @@ import (
 	"time"
 
 	bolt "go.etcd.io/bbolt"
+	"github.com/balaji-balu/margo-hello-world/pkg/model"
 )
 
 const nodesBucket = "nodes"
@@ -65,10 +66,26 @@ func GetAllNodes(db *bolt.DB) []EdgeNode {
 }
 
 // deployment record stored as map[nodeID]statusString
+/*
 func SaveDeploymentRecord(db *bolt.DB, deployID string, record map[string]string) {
 	b, _ := json.Marshal(record)
 	db.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket([]byte(deploymentsBucket)).Put([]byte(deployID), b)
+	})
+}
+*/
+func SaveDeploymentRecord(db *bolt.DB, deployID string, record interface{}) error {
+	b, err := json.Marshal(record)
+	if err != nil {
+		return fmt.Errorf("marshal record: %w", err)
+	}
+
+	return db.Update(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket([]byte(deploymentsBucket))
+		if bkt == nil {
+			return fmt.Errorf("bucket %s not found", deploymentsBucket)
+		}
+		return bkt.Put([]byte(deployID), b)
 	})
 }
 
@@ -87,6 +104,32 @@ func GetAllDeployments(db *bolt.DB) map[string]map[string]string {
 	return res
 }
 
+func UpdateDeploymentRecord(db *bolt.DB, deployID string, newStatus model.DeploymentStatus) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket([]byte(deploymentsBucket))
+		if bkt == nil {
+			return fmt.Errorf("bucket %s not found", deploymentsBucket)
+		}
+
+		var existing model.DeploymentStatus
+		v := bkt.Get([]byte(deployID))
+		if v != nil {
+			_ = json.Unmarshal(v, &existing)
+		}
+
+		// Merge or replace
+		existing.Status = newStatus.Status
+		existing.Components = newStatus.Components
+
+		data, err := json.Marshal(existing)
+		if err != nil {
+			return fmt.Errorf("marshal updated record: %w", err)
+		}
+
+		return bkt.Put([]byte(deployID), data)
+	})
+}
+/*
 func UpdateDeploymentRecord(db *bolt.DB, deployID, nodeID string, success interface{}, message string) {
 	// load existing
 	var rec map[string]string
@@ -105,6 +148,7 @@ func UpdateDeploymentRecord(db *bolt.DB, deployID, nodeID string, success interf
 	})
 }
 
+
 func toStr(v interface{}) string {
 	switch x := v.(type) {
 	case bool:
@@ -119,3 +163,4 @@ func toStr(v interface{}) string {
 		return fmt.Sprintf("%v", v)
 	}
 }
+*/

@@ -17,7 +17,8 @@ type Site struct {
 
 func (Site) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}),
+		//field.UUID("id", uuid.UUID{}),
+		UUIDField(),
 		field.String("site_id").Unique(),
 		field.String("name").Optional(),
 		field.String("description").Optional(),

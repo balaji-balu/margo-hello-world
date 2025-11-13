@@ -17,14 +17,19 @@ type Host struct {
 
 func (Host) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}),
+		//field.UUID("id", uuid.UUID{}),
+		UUIDField(),
 		field.String("host_id").Unique(),
 		field.UUID("site_id", uuid.UUID{}).Optional(),
+		field.String("runtime").Optional(),
+		field.Time("last_heartbeat").Optional(),
+		field.Float("cpu_free").Optional(),
+		field.String("status").Optional(),
+		
 		field.String("hostname").Optional(),
 		field.String("ip_address").Optional(),
 		field.String("edge_url").Optional(),
-		field.String("status").Optional(),
-		field.Time("last_heartbeat").Optional(),
+		
 		field.JSON("metadata", struct{}{}).Optional(),
 		field.Time("created_at").Optional(), field.Time("updated_at").Optional()}
 }

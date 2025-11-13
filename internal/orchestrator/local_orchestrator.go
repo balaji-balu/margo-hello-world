@@ -7,29 +7,18 @@ import (
 	"os"
 	"sync"
 	"time"
-	//"encoding/json"
+	"net"
+	"net/http"
+	"github.com/gin-gonic/gin"
+	"github.com/looplab/fsm"
+	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"	
 
 	"github.com/balaji-balu/margo-hello-world/ent"
-	// _ "github.com/lib/pq"  // enables the 'postgres' driver
-	// "entgo.io/ent/dialect"
-	// "entgo.io/ent/dialect/sql"
-
-	//"github.com/looplab/fsm"
-	//fsmloader "github.com/balaji-balu/margo-hello-world/internal/fsm"
-	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
-	. "github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
 	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
-	"github.com/gin-gonic/gin"
-	"github.com/looplab/fsm"
-	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
-	"net"
-	"net/http"
-	//"github.com/balaji-balu/margo-hello-world/pkg/deployment"
-	//"fmt"
+	"github.com/balaji-balu/margo-hello-world/pkg/model"
 )
 
 type EventType string
@@ -85,9 +74,10 @@ type LocalOrchestrator struct {
 	rb *ResultBus
 	//eventCh chan string
 	RootCtx context.Context
-	db      *bolt.DB
+	//db      *bolt.DB
 	nc      *natsbroker.Broker
 
+	db *ent.Client
 	eventCh     chan Event
 	logger      *zap.Logger
 	currentMode string
@@ -108,8 +98,8 @@ func (lo *LocalOrchestrator) Machine() *fsm.FSM {
 
 func New(
 	ctx context.Context,
-	cfg *Config,
-	db *bolt.DB,
+	siteID, natsURL, repo string,
+	db *ent.Client,
 	nc *natsbroker.Broker,
 	logger *zap.Logger,
 ) *LocalOrchestrator {
@@ -118,10 +108,10 @@ func New(
 	return &LocalOrchestrator{
 		Config: LoConfig{
 			//Owner: cfg..Owner,
-			Repo:    cfg.Git.Repo,
-			NatsUrl: cfg.NATS.URL,
+			Repo:    repo, //cfg.Git.Repo,
+			NatsUrl: natsURL,//cfg.NATS.URL,
 			Token:   os.Getenv("GITHUB_TOKEN"),
-			Site:    cfg.Server.Site,
+			Site:    siteID, //cfg.Server.Site,
 		},
 		logger: logger,
 		rb:     rb,
@@ -161,62 +151,26 @@ func (lo *LocalOrchestrator) RegisterRequest(c *gin.Context) {
 	})
 }
 
-func (lo *LocalOrchestrator) DeployStatus(c *gin.Context) {
-	var status deployment.DeploymentReport
-	ctx := c.Request.Context()
-
-	if err := c.ShouldBindJSON(&status); err != nil {
-		log.Println("❌ Invalid deploy status request:", err)
-		return
-	}
-
-	if status.Status == deployment.StatusSuccess {
-		if err := lo.FSM.Event(ctx, "edge_accepted"); err != nil {
-			fmt.Println("❌ Error:", err)
-			return
-		}
-	} else if status.Status == deployment.StatusStarted {
-	} else if status.Status == deployment.StatusRunning {
-	} else if status.Status == deployment.StatusCompleted {
-		// if err := lo.machine.Event(ctx, "edge_rejected"); err != nil {
-		//     fmt.Println("❌ Error:", err)
-		//     return
-		// }
-	} else if status.Status == deployment.StatusFailed {
-		log.Println("deploy failed status edge_rejected calling")
-		if err := lo.FSM.Event(ctx, "edge_rejected"); err != nil {
-			fmt.Println("❌ Error:", err)
-			return
-		}
-	} else {
-
-	}
-
-	log.Println("deploy app name", status.AppName)
-	log.Println("deploy status", status.Status)
-	log.Println("deploy message", status.Message)
-
-}
-
 func (lo *LocalOrchestrator) DeployToEdges(
 	id string,
 	dep deployment.ApplicationDeployment,
 ) {
-	targetEdges := GetAllNodes(lo.db)
-	log.Println("Deploying to edges:", targetEdges)
+	targetEdges, err := lo.GetAllNodes(lo.RootCtx)
+	log.Println("Deploying to edges:", targetEdges, err)
 
 	var wg sync.WaitGroup
 
 	for _, node := range targetEdges {
 		wg.Add(1)
-		go func(node EdgeNode) {
+		go func(node *ent.Host) {
 			defer wg.Done()
-			lo.logger.Info("Deploying to node", zap.String("node_id", node.NodeID))
+			lo.logger.Info("Deploying to node", zap.String("node_id", node.HostID))
 
 			// Extract repo + revision from spec
 			repoVal := dep.Spec.DeploymentProfile.Components[0].Properties.Repository
 			revision := dep.Spec.DeploymentProfile.Components[0].Properties.Revision
 
+			log.Println("for this target(repo:revision): ", repoVal, revision)
 			req := deployment.DeployRequest{
 				DeploymentID: dep.Metadata.Annotations.ID,
 				GitRepoURL:   repoVal,
@@ -227,20 +181,17 @@ func (lo *LocalOrchestrator) DeployToEdges(
 			req.ContainerImages = append(req.ContainerImages, repoVal)
 
 			// ✅ create a record for this node in DB as "pending"
-			rec := map[string]string{
-				node.NodeID: "pending",
+			// rec := map[string]string{
+			// 	node.NodeID: "pending",
+			// }
+			// SaveDeploymentRecord(lo.db, req.DeploymentID, rec)
+			status := model.DeploymentStatus{
+				
 			}
-			SaveDeploymentRecord(lo.db, req.DeploymentID, rec)
+			lo.SaveDeploymentRecord(context.Background(), &status)
 
 			log.Println("Deploying to node req:", req)
-			// // ✅ prepare payload and subject for NATS publish
-			// payload, err := json.Marshal(req)
-			// if err != nil {
-			//     lo.logger.Error("Failed to marshal deploy request", zap.Error(err))
-			//     return
-			// }
-
-			subj := fmt.Sprintf("site.%s.deploy.%s", node.SiteID, node.NodeID)
+			subj := fmt.Sprintf("site.%s.deploy.%s", node.SiteID, node.HostID)
 			if err := lo.nc.Publish(subj, req); err != nil {
 				lo.logger.Error("Failed to publish deploy message", zap.Error(err))
 				return

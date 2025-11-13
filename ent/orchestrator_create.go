@@ -4,9 +4,12 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
@@ -19,6 +22,7 @@ type OrchestratorCreate struct {
 	config
 	mutation *OrchestratorMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -191,6 +195,7 @@ func (_c *OrchestratorCreate) createSpec() (*Orchestrator, *sqlgraph.CreateSpec)
 		_node = &Orchestrator{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(orchestrator.Table, sqlgraph.NewFieldSpec(orchestrator.FieldID, field.TypeUUID))
 	)
+	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
@@ -238,11 +243,381 @@ func (_c *OrchestratorCreate) createSpec() (*Orchestrator, *sqlgraph.CreateSpec)
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Orchestrator.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.OrchestratorUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *OrchestratorCreate) OnConflict(opts ...sql.ConflictOption) *OrchestratorUpsertOne {
+	_c.conflict = opts
+	return &OrchestratorUpsertOne{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Orchestrator.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *OrchestratorCreate) OnConflictColumns(columns ...string) *OrchestratorUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &OrchestratorUpsertOne{
+		create: _c,
+	}
+}
+
+type (
+	// OrchestratorUpsertOne is the builder for "upsert"-ing
+	//  one Orchestrator node.
+	OrchestratorUpsertOne struct {
+		create *OrchestratorCreate
+	}
+
+	// OrchestratorUpsert is the "OnConflict" setter.
+	OrchestratorUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *OrchestratorUpsert) SetName(v string) *OrchestratorUpsert {
+	u.Set(orchestrator.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *OrchestratorUpsert) UpdateName() *OrchestratorUpsert {
+	u.SetExcluded(orchestrator.FieldName)
+	return u
+}
+
+// ClearName clears the value of the "name" field.
+func (u *OrchestratorUpsert) ClearName() *OrchestratorUpsert {
+	u.SetNull(orchestrator.FieldName)
+	return u
+}
+
+// SetType sets the "type" field.
+func (u *OrchestratorUpsert) SetType(v string) *OrchestratorUpsert {
+	u.Set(orchestrator.FieldType, v)
+	return u
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *OrchestratorUpsert) UpdateType() *OrchestratorUpsert {
+	u.SetExcluded(orchestrator.FieldType)
+	return u
+}
+
+// ClearType clears the value of the "type" field.
+func (u *OrchestratorUpsert) ClearType() *OrchestratorUpsert {
+	u.SetNull(orchestrator.FieldType)
+	return u
+}
+
+// SetRegion sets the "region" field.
+func (u *OrchestratorUpsert) SetRegion(v string) *OrchestratorUpsert {
+	u.Set(orchestrator.FieldRegion, v)
+	return u
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *OrchestratorUpsert) UpdateRegion() *OrchestratorUpsert {
+	u.SetExcluded(orchestrator.FieldRegion)
+	return u
+}
+
+// ClearRegion clears the value of the "region" field.
+func (u *OrchestratorUpsert) ClearRegion() *OrchestratorUpsert {
+	u.SetNull(orchestrator.FieldRegion)
+	return u
+}
+
+// SetAPIEndpoint sets the "api_endpoint" field.
+func (u *OrchestratorUpsert) SetAPIEndpoint(v string) *OrchestratorUpsert {
+	u.Set(orchestrator.FieldAPIEndpoint, v)
+	return u
+}
+
+// UpdateAPIEndpoint sets the "api_endpoint" field to the value that was provided on create.
+func (u *OrchestratorUpsert) UpdateAPIEndpoint() *OrchestratorUpsert {
+	u.SetExcluded(orchestrator.FieldAPIEndpoint)
+	return u
+}
+
+// ClearAPIEndpoint clears the value of the "api_endpoint" field.
+func (u *OrchestratorUpsert) ClearAPIEndpoint() *OrchestratorUpsert {
+	u.SetNull(orchestrator.FieldAPIEndpoint)
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *OrchestratorUpsert) SetCreatedAt(v time.Time) *OrchestratorUpsert {
+	u.Set(orchestrator.FieldCreatedAt, v)
+	return u
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *OrchestratorUpsert) UpdateCreatedAt() *OrchestratorUpsert {
+	u.SetExcluded(orchestrator.FieldCreatedAt)
+	return u
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *OrchestratorUpsert) ClearCreatedAt() *OrchestratorUpsert {
+	u.SetNull(orchestrator.FieldCreatedAt)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *OrchestratorUpsert) SetUpdatedAt(v time.Time) *OrchestratorUpsert {
+	u.Set(orchestrator.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *OrchestratorUpsert) UpdateUpdatedAt() *OrchestratorUpsert {
+	u.SetExcluded(orchestrator.FieldUpdatedAt)
+	return u
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *OrchestratorUpsert) ClearUpdatedAt() *OrchestratorUpsert {
+	u.SetNull(orchestrator.FieldUpdatedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Orchestrator.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(orchestrator.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *OrchestratorUpsertOne) UpdateNewValues() *OrchestratorUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(orchestrator.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Orchestrator.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *OrchestratorUpsertOne) Ignore() *OrchestratorUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *OrchestratorUpsertOne) DoNothing() *OrchestratorUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the OrchestratorCreate.OnConflict
+// documentation for more info.
+func (u *OrchestratorUpsertOne) Update(set func(*OrchestratorUpsert)) *OrchestratorUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&OrchestratorUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *OrchestratorUpsertOne) SetName(v string) *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *OrchestratorUpsertOne) UpdateName() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *OrchestratorUpsertOne) ClearName() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *OrchestratorUpsertOne) SetType(v string) *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *OrchestratorUpsertOne) UpdateType() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateType()
+	})
+}
+
+// ClearType clears the value of the "type" field.
+func (u *OrchestratorUpsertOne) ClearType() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearType()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *OrchestratorUpsertOne) SetRegion(v string) *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *OrchestratorUpsertOne) UpdateRegion() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateRegion()
+	})
+}
+
+// ClearRegion clears the value of the "region" field.
+func (u *OrchestratorUpsertOne) ClearRegion() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearRegion()
+	})
+}
+
+// SetAPIEndpoint sets the "api_endpoint" field.
+func (u *OrchestratorUpsertOne) SetAPIEndpoint(v string) *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetAPIEndpoint(v)
+	})
+}
+
+// UpdateAPIEndpoint sets the "api_endpoint" field to the value that was provided on create.
+func (u *OrchestratorUpsertOne) UpdateAPIEndpoint() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateAPIEndpoint()
+	})
+}
+
+// ClearAPIEndpoint clears the value of the "api_endpoint" field.
+func (u *OrchestratorUpsertOne) ClearAPIEndpoint() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearAPIEndpoint()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *OrchestratorUpsertOne) SetCreatedAt(v time.Time) *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *OrchestratorUpsertOne) UpdateCreatedAt() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *OrchestratorUpsertOne) ClearCreatedAt() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *OrchestratorUpsertOne) SetUpdatedAt(v time.Time) *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *OrchestratorUpsertOne) UpdateUpdatedAt() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *OrchestratorUpsertOne) ClearUpdatedAt() *OrchestratorUpsertOne {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *OrchestratorUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for OrchestratorCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *OrchestratorUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *OrchestratorUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: OrchestratorUpsertOne.ID is not supported by MySQL driver. Use OrchestratorUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *OrchestratorUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // OrchestratorCreateBulk is the builder for creating many Orchestrator entities in bulk.
 type OrchestratorCreateBulk struct {
 	config
 	err      error
 	builders []*OrchestratorCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Orchestrator entities in the database.
@@ -271,6 +646,7 @@ func (_c *OrchestratorCreateBulk) Save(ctx context.Context) ([]*Orchestrator, er
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -317,6 +693,246 @@ func (_c *OrchestratorCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *OrchestratorCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Orchestrator.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.OrchestratorUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *OrchestratorCreateBulk) OnConflict(opts ...sql.ConflictOption) *OrchestratorUpsertBulk {
+	_c.conflict = opts
+	return &OrchestratorUpsertBulk{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Orchestrator.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *OrchestratorCreateBulk) OnConflictColumns(columns ...string) *OrchestratorUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &OrchestratorUpsertBulk{
+		create: _c,
+	}
+}
+
+// OrchestratorUpsertBulk is the builder for "upsert"-ing
+// a bulk of Orchestrator nodes.
+type OrchestratorUpsertBulk struct {
+	create *OrchestratorCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Orchestrator.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(orchestrator.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *OrchestratorUpsertBulk) UpdateNewValues() *OrchestratorUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(orchestrator.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Orchestrator.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *OrchestratorUpsertBulk) Ignore() *OrchestratorUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *OrchestratorUpsertBulk) DoNothing() *OrchestratorUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the OrchestratorCreateBulk.OnConflict
+// documentation for more info.
+func (u *OrchestratorUpsertBulk) Update(set func(*OrchestratorUpsert)) *OrchestratorUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&OrchestratorUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *OrchestratorUpsertBulk) SetName(v string) *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *OrchestratorUpsertBulk) UpdateName() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *OrchestratorUpsertBulk) ClearName() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearName()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *OrchestratorUpsertBulk) SetType(v string) *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *OrchestratorUpsertBulk) UpdateType() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateType()
+	})
+}
+
+// ClearType clears the value of the "type" field.
+func (u *OrchestratorUpsertBulk) ClearType() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearType()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *OrchestratorUpsertBulk) SetRegion(v string) *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *OrchestratorUpsertBulk) UpdateRegion() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateRegion()
+	})
+}
+
+// ClearRegion clears the value of the "region" field.
+func (u *OrchestratorUpsertBulk) ClearRegion() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearRegion()
+	})
+}
+
+// SetAPIEndpoint sets the "api_endpoint" field.
+func (u *OrchestratorUpsertBulk) SetAPIEndpoint(v string) *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetAPIEndpoint(v)
+	})
+}
+
+// UpdateAPIEndpoint sets the "api_endpoint" field to the value that was provided on create.
+func (u *OrchestratorUpsertBulk) UpdateAPIEndpoint() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateAPIEndpoint()
+	})
+}
+
+// ClearAPIEndpoint clears the value of the "api_endpoint" field.
+func (u *OrchestratorUpsertBulk) ClearAPIEndpoint() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearAPIEndpoint()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *OrchestratorUpsertBulk) SetCreatedAt(v time.Time) *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *OrchestratorUpsertBulk) UpdateCreatedAt() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// ClearCreatedAt clears the value of the "created_at" field.
+func (u *OrchestratorUpsertBulk) ClearCreatedAt() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *OrchestratorUpsertBulk) SetUpdatedAt(v time.Time) *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *OrchestratorUpsertBulk) UpdateUpdatedAt() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *OrchestratorUpsertBulk) ClearUpdatedAt() *OrchestratorUpsertBulk {
+	return u.Update(func(s *OrchestratorUpsert) {
+		s.ClearUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *OrchestratorUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the OrchestratorCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for OrchestratorCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *OrchestratorUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

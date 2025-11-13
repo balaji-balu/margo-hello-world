@@ -5,6 +5,7 @@ package host
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -16,16 +17,20 @@ const (
 	FieldHostID = "host_id"
 	// FieldSiteID holds the string denoting the site_id field in the database.
 	FieldSiteID = "site_id"
+	// FieldRuntime holds the string denoting the runtime field in the database.
+	FieldRuntime = "runtime"
+	// FieldLastHeartbeat holds the string denoting the last_heartbeat field in the database.
+	FieldLastHeartbeat = "last_heartbeat"
+	// FieldCPUFree holds the string denoting the cpu_free field in the database.
+	FieldCPUFree = "cpu_free"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// FieldHostname holds the string denoting the hostname field in the database.
 	FieldHostname = "hostname"
 	// FieldIPAddress holds the string denoting the ip_address field in the database.
 	FieldIPAddress = "ip_address"
 	// FieldEdgeURL holds the string denoting the edge_url field in the database.
 	FieldEdgeURL = "edge_url"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
-	// FieldLastHeartbeat holds the string denoting the last_heartbeat field in the database.
-	FieldLastHeartbeat = "last_heartbeat"
 	// FieldMetadata holds the string denoting the metadata field in the database.
 	FieldMetadata = "metadata"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -50,11 +55,13 @@ var Columns = []string{
 	FieldID,
 	FieldHostID,
 	FieldSiteID,
+	FieldRuntime,
+	FieldLastHeartbeat,
+	FieldCPUFree,
+	FieldStatus,
 	FieldHostname,
 	FieldIPAddress,
 	FieldEdgeURL,
-	FieldStatus,
-	FieldLastHeartbeat,
 	FieldMetadata,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -69,6 +76,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
+)
 
 // OrderOption defines the ordering options for the Host queries.
 type OrderOption func(*sql.Selector)
@@ -88,6 +100,26 @@ func BySiteID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSiteID, opts...).ToFunc()
 }
 
+// ByRuntime orders the results by the runtime field.
+func ByRuntime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRuntime, opts...).ToFunc()
+}
+
+// ByLastHeartbeat orders the results by the last_heartbeat field.
+func ByLastHeartbeat(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastHeartbeat, opts...).ToFunc()
+}
+
+// ByCPUFree orders the results by the cpu_free field.
+func ByCPUFree(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCPUFree, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
 // ByHostname orders the results by the hostname field.
 func ByHostname(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHostname, opts...).ToFunc()
@@ -101,16 +133,6 @@ func ByIPAddress(opts ...sql.OrderTermOption) OrderOption {
 // ByEdgeURL orders the results by the edge_url field.
 func ByEdgeURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEdgeURL, opts...).ToFunc()
-}
-
-// ByStatus orders the results by the status field.
-func ByStatus(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStatus, opts...).ToFunc()
-}
-
-// ByLastHeartbeat orders the results by the last_heartbeat field.
-func ByLastHeartbeat(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLastHeartbeat, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

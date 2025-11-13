@@ -6,19 +6,19 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
+	//"time"
+	"github.com/google/go-github/v55/github"
+	"golang.org/x/oauth2"
+	"net/http"
+	//"strings"
 
-	//"github.com/balaji-balu/margo-hello-world/pkg"
-	//"google.golang.org/grpc"
-	//"google.golang.org/grpc/credentials/insecure"
+	//"github.com/joho/godotenv"
+	"path/filepath"
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
-
-	pb "github.com/balaji-balu/margo-hello-world/proto_generated"
-	//"go.opentelemetry.io/otel"
-	//"go.opentelemetry.io/otel/attribute"
-
 	"github.com/gin-gonic/gin"
 
+	pb "github.com/balaji-balu/margo-hello-world/proto_generated"
 	"github.com/balaji-balu/margo-hello-world/ent"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
@@ -27,14 +27,8 @@ import (
 	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
 	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
-
-	"github.com/google/go-github/v55/github"
-	"golang.org/x/oauth2"
-	"net/http"
-	"strings"
-
-	//"github.com/joho/godotenv"
-	"path/filepath"
+	"github.com/balaji-balu/margo-hello-world/pkg/model"
+	
 )
 
 var (
@@ -67,116 +61,35 @@ func init() {
 	// }
 }
 
-func (s *server) ReportStatus(ctx context.Context, req *pb.StatusReport) (*pb.DeployResponse, error) {
-	status := req.Statuses[0]
-	log.Printf("[CO] ReportStatus received for deployment %s, node=%s, status=%s",
-		req.DeploymentId,
-		status.NodeId,
-		status.Status.String())
-	return &pb.DeployResponse{
-		DeploymentId: req.DeploymentId,
-		Message:      "Status received by CO",
-	}, nil
-}
-
-// deployFleet reads a YAML file and sends deploy request to LO
-// func deployFleet(ctx context.Context, yamlPath, loAddr string) error {
-
-//     workflow := "policy-sync"
-
-//     tracer := otel.Tracer("eos/orchestrator")
-//     ctx, span := tracer.Start(ctx, "ScheduleDeployment")
-//     defer span.End()
-
-//     log.Printf("[CO] reading fleet from %s", yamlPath)
-//     b, err := os.ReadFile(yamlPath)
-//     if err != nil {
-//         return fmt.Errorf("read yaml: %v", err)
-//     }
-
-//     var inp pkg.Deployment
-//     // var inp struct {
-//     //     Metadata struct {
-//     //         Name string `yaml:"name"`
-//     //     } `yaml:"metadata"`
-//     //     Spec struct {
-//     //         Nodes []struct {
-//     //             Id       string `yaml:"id"`
-//     //             Services []struct {
-//     //                 Name      string `yaml:"name"`
-//     //                 Container struct {
-//     //                     Image   string   `yaml:"image"`
-//     //                     Command []string `yaml:"command"`
-//     //                 } `yaml:"container"`
-//     //             } `yaml:"services"`
-//     //         } `yaml:"nodes"`
-//     //     } `yaml:"spec"`
-//     // }
-
-//     if err := yaml.Unmarshal(b, &inp); err != nil {
-//         return fmt.Errorf("yaml unmarshal: %v", err)
-//     }
-
-//     fleet := &pb.Fleet{Name: inp.Metadata.Name}
-//     for _, n := range inp.Spec.Nodes {
-//         node := &pb.NodeSpec{Id: n.Id}
-//         span.SetAttributes(
-//             attribute.String("eos.node", n.Id),
-//             attribute.String("eos.workflow", workflow),
-//             attribute.String("margo.spec", "v0.7-pre"),
-//         )
-//         for _, s := range n.Services {
-//             svc := &pb.ServiceSpec{
-//                 Name: s.Name,
-//                 Container: &pb.ContainerSpec{
-//                     Image:   s.Container.Image,
-//                     Command: s.Container.Command,
-//                 },
-//             }
-//             node.Services = append(node.Services, svc)
-//         }
-//         fleet.Nodes = append(fleet.Nodes, node)
-//     }
-
-//     deploymentID := fmt.Sprintf("dep-%d", time.Now().Unix())
-//     req := &pb.DeployRequest{DeploymentId: deploymentID, Fleet: fleet}
-
-//     conn, err := grpc.Dial(loAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-//     if err != nil {
-//         return fmt.Errorf("dial lo: %v", err)
-//     }
-//     defer conn.Close()
-//     client := pb.NewLocalOrchestratorClient(conn)
-
-//     ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-//     defer cancel()
-
-//     log.Printf("[CO] sending deploy to LO at %s", loAddr)
-//     resp, err := client.ReceiveDeploy(ctx, req)
-//     if err != nil {
-//         return fmt.Errorf("send deploy to lo: %v", err)
-//     }
-
-//     log.Printf("[CO] LO responded: %s, deployment_id=%s", resp.Message, resp.DeploymentId)
-//     return nil
+// func (s *server) ReportStatus(ctx context.Context, req *pb.StatusReport) (*pb.DeployResponse, error) {
+// 	status := req.Statuses[0]
+// 	log.Printf("[CO] ReportStatus received for deployment %s, node=%s, status=%s",
+// 		req.DeploymentId,
+// 		status.NodeId,
+// 		status.Status.String())
+// 	return &pb.DeployResponse{
+// 		DeploymentId: req.DeploymentId,
+// 		Message:      "Status received by CO",
+// 	}, nil
 // }
 
-func buildDeployParameters(sites []HostMapping) []deployment.Parameter {
+
+func buildDeployParameters(siteID string) []deployment.Parameter {
 	var params []deployment.Parameter
 
-	for _, site := range sites {
+	//for _, site := range sites {
 		param := deployment.Parameter{
 			Name:  "SiteId",
-			Value: site.SiteID, // This can represent site or contextual value
+			Value: siteID, // This can represent site or contextual value
 			Targets: []deployment.Target{
 				{
-					Pointer:    fmt.Sprintf("/sites/%s", site.SiteID),
-					Components: site.HostIDs, // hostIDs act as components or nodes
+					Pointer:    fmt.Sprintf("/sites/%s", siteID),
+					//Components: [], // hostIDs act as components or nodes
 				},
 			},
 		}
 		params = append(params, param)
-	}
+	//}
 
 	return params
 }
@@ -212,12 +125,13 @@ func buildApplicationDeployment(
 	appDesc *ent.ApplicationDesc,
 	profile *ent.DeploymentProfile,
 	components []*ent.Component,
-	sites []HostMapping,
+	siteID string,
 ) deployment.ApplicationDeployment {
-	id := strings.ReplaceAll(appDesc.Name, " ", "-")
-	id = strings.ReplaceAll(id, "'", "")
-	id = strings.ToLower(id)
-	id = fmt.Sprintf("%s-%d", id, time.Now().Unix())
+	// id := strings.ReplaceAll(appDesc.Name, " ", "-")
+	// id = strings.ReplaceAll(id, "'", "")
+	// id = strings.ToLower(id)
+	// id = fmt.Sprintf("%s-%d", id, time.Now().Unix())
+	id := GenerateDeploymentID()
 
 	return deployment.ApplicationDeployment{
 		APIVersion: "margo.edge/v1",
@@ -234,7 +148,7 @@ func buildApplicationDeployment(
 		},
 		Spec: deployment.Spec{
 			DeploymentProfile: buildDeploymentProfile(profile, components),
-			Parameters:        buildDeployParameters(sites),
+			Parameters:        buildDeployParameters(siteID),
 		},
 	}
 }
@@ -281,7 +195,7 @@ func PushDeploymentYAML(ctx context.Context,
 }
 
 func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
-	log.Println("CreateDeployment called. Site:", cfg.Server.Site)
+	//log.Println("CreateDeployment called. Site:", cfg.Server.Site)
 	log.Println("Repo URL:", cfg.Git.Repo)
 
 	var app App
@@ -292,7 +206,7 @@ func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
 	}
 
 	log.Printf("🌀 Incoming app: %+v\n", app)
-
+	log.Println("Targeted Sites:", app.Sites)
 	ctx := context.Background()
 
 	// --- 1️⃣ Check if the app exists by ID or name ---
@@ -354,37 +268,58 @@ func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
 	}
 	log.Println("components:", components)
 
-	appdply := buildApplicationDeployment(appDesc, profile, components, app.Sites)
-	deploymentID := appdply.Metadata.Annotations.ID
-	log.Println("deploymentID:", deploymentID)
-	//log.Println("appdply:", appdply.Metadata.Annotations.ID)
+	//TBD: create deployment for all the selected targets
+	// 
+	var deployments []string
+	for _, site := range app.Sites {
 
-	//yamlData, err := yaml.Marshal(&appdply)
+		appdply := buildApplicationDeployment(appDesc, profile, components, site.SiteID)
+		deploymentID := appdply.Metadata.Annotations.ID
+		log.Println("deploymentID:", deploymentID)
+		token := os.Getenv("GITHUB_TOKEN")
 
-	//os.WriteFile("./desiredstate.yaml", yamlData, 0644)
-	//log.Println("yamldata:", yamlData)
+		owner := cfg.Git.Owner //"edge-orchestration-platform"
+		repo := cfg.Git.Repo   //"deployments"
+		path := filepath.Join(site.SiteID, deploymentID, "desiredstate.yaml")
+		message := "Add new deployment"
 
-	token := os.Getenv("GITHUB_TOKEN")
+		log.Println("token:", token)
+		log.Println("owner:", owner)
+		log.Println("repo:", repo)
+		log.Println("path:", path)
+		//log.Println("message:", message)
 
-	owner := cfg.Git.Owner //"edge-orchestration-platform"
-	repo := cfg.Git.Repo   //"deployments"
-	path := filepath.Join(cfg.Server.Site, deploymentID, "desiredstate.yaml")
-	message := "Add new deployment"
+		if err := PushDeploymentYAML(ctx, token, owner, 
+						repo, path, message, appdply); err != nil {
+			log.Fatal(err)
+		}
 
-	log.Println("token:", token)
-	log.Println("owner:", owner)
-	log.Println("repo:", repo)
-	log.Println("path:", path)
-	//log.Println("message:", message)
+		//TBD: create a deployment record in postgres using ent
+		//      can be mapped to pkg/model DeploymentStatus
+		//     deploymentid, status:pending, components: [{container1}, {container2}, ]
+		//     This record can be part of deploymenthistory
+		//dss, err := client.DeploymentStatus
+		status := &model.DeploymentStatus{
+			//APIVersion:   "deployment.margo/v1",
+			//Kind:         "DeploymentStatus",
+			DeploymentID: deploymentID,
+			Status: model.DeploymentState{
+				State: string(model.StateInstalling),
+				Error: model.StatusError{},
+			},
+			Components: []model.DeploymentComponent{
+				{Name: "digitron-orchestrator", State: string(model.StateInstalling)},
+				{Name: "database-services", State: string(model.StatePending)},
+			},
+		}
+		SaveDeploymentStatus(ctx, client, status)
 
-	if err := PushDeploymentYAML(ctx, token, owner, repo, path, message, appdply); err != nil {
-		log.Fatal(err)
+		deployments = append(deployments, deploymentID)
+		log.Printf("✅ Successfully pushed deployment YAML for profile %s", profile.ID)
 	}
 
-	log.Printf("✅ Successfully pushed deployment YAML for profile %s", profile.ID)
-
 	c.JSON(http.StatusOK, gin.H{
-			"deployment_id": deploymentID,
+			"deployment_ids": deployments,
 			"status":        "started",
 	})	
 	return
@@ -443,3 +378,56 @@ func HandleStreamDeployment(c *gin.Context, sm *streammanager.StreamManager) {
 	// When done, ensure connection closes cleanly
 	//c.Writer.Flush()
 }
+
+func GenerateDeploymentID() string {
+	return uuid.New().String()
+}
+
+
+func SaveDeploymentStatus(ctx context.Context, client *ent.Client, ds *model.DeploymentStatus) error {
+	id, err := uuid.Parse(ds.DeploymentID)
+	if err != nil {
+		return err
+	}
+
+	tx, err := client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	deploy, err := tx.DeploymentStatus.
+		Create().
+		SetID(id).
+		//SetAPIVersion(ds.APIVersion).
+		//SetKind(ds.Kind).
+		SetState(ds.Status.State).
+		SetErrorCode(ds.Status.Error.Code).
+		SetErrorMessage(ds.Status.Error.Message).
+		Save(ctx)
+	if err != nil {
+		return tx.Rollback()
+	}
+
+	for _, c := range ds.Components {
+		_, err = tx.DeploymentComponentStatus.
+			Create().
+			SetName(c.Name).
+			SetState(c.State).
+			SetErrorCode(c.Error.Code).
+			SetErrorMessage(c.Error.Message).
+			SetDeployment(deploy).
+			Save(ctx)
+		if err != nil {
+			return tx.Rollback()
+		}
+	}
+
+	return tx.Commit()
+}
+
+

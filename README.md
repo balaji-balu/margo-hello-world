@@ -1,3 +1,7 @@
+
+podman-compose -f docker-compose.2lo-4en.yaml --env-file .env.staging up --scale en=2 -d --build
+
+
 field.JSON("tags", []string{}).Optional(),
 
 site.f95d34b2-8019-4590-a3ff-ff1e15ecc5d5.deploy.edge1-containerd

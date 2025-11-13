@@ -4,8 +4,11 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
@@ -18,6 +21,7 @@ type DeploymentProfileCreate struct {
 	config
 	mutation *DeploymentProfileMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetType sets the "type" field.
@@ -227,6 +231,7 @@ func (_c *DeploymentProfileCreate) createSpec() (*DeploymentProfile, *sqlgraph.C
 		_node = &DeploymentProfile{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(deploymentprofile.Table, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -299,11 +304,511 @@ func (_c *DeploymentProfileCreate) createSpec() (*DeploymentProfile, *sqlgraph.C
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.DeploymentProfile.Create().
+//		SetType(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.DeploymentProfileUpsert) {
+//			SetType(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *DeploymentProfileCreate) OnConflict(opts ...sql.ConflictOption) *DeploymentProfileUpsertOne {
+	_c.conflict = opts
+	return &DeploymentProfileUpsertOne{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.DeploymentProfile.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *DeploymentProfileCreate) OnConflictColumns(columns ...string) *DeploymentProfileUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &DeploymentProfileUpsertOne{
+		create: _c,
+	}
+}
+
+type (
+	// DeploymentProfileUpsertOne is the builder for "upsert"-ing
+	//  one DeploymentProfile node.
+	DeploymentProfileUpsertOne struct {
+		create *DeploymentProfileCreate
+	}
+
+	// DeploymentProfileUpsert is the "OnConflict" setter.
+	DeploymentProfileUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetType sets the "type" field.
+func (u *DeploymentProfileUpsert) SetType(v string) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldType, v)
+	return u
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateType() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldType)
+	return u
+}
+
+// ClearType clears the value of the "type" field.
+func (u *DeploymentProfileUpsert) ClearType() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldType)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *DeploymentProfileUpsert) SetDescription(v string) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateDescription() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldDescription)
+	return u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *DeploymentProfileUpsert) ClearDescription() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldDescription)
+	return u
+}
+
+// SetCPUCores sets the "cpu_cores" field.
+func (u *DeploymentProfileUpsert) SetCPUCores(v float64) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldCPUCores, v)
+	return u
+}
+
+// UpdateCPUCores sets the "cpu_cores" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateCPUCores() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldCPUCores)
+	return u
+}
+
+// AddCPUCores adds v to the "cpu_cores" field.
+func (u *DeploymentProfileUpsert) AddCPUCores(v float64) *DeploymentProfileUpsert {
+	u.Add(deploymentprofile.FieldCPUCores, v)
+	return u
+}
+
+// ClearCPUCores clears the value of the "cpu_cores" field.
+func (u *DeploymentProfileUpsert) ClearCPUCores() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldCPUCores)
+	return u
+}
+
+// SetMemory sets the "memory" field.
+func (u *DeploymentProfileUpsert) SetMemory(v string) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldMemory, v)
+	return u
+}
+
+// UpdateMemory sets the "memory" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateMemory() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldMemory)
+	return u
+}
+
+// ClearMemory clears the value of the "memory" field.
+func (u *DeploymentProfileUpsert) ClearMemory() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldMemory)
+	return u
+}
+
+// SetStorage sets the "storage" field.
+func (u *DeploymentProfileUpsert) SetStorage(v string) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldStorage, v)
+	return u
+}
+
+// UpdateStorage sets the "storage" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateStorage() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldStorage)
+	return u
+}
+
+// ClearStorage clears the value of the "storage" field.
+func (u *DeploymentProfileUpsert) ClearStorage() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldStorage)
+	return u
+}
+
+// SetCPUArchitectures sets the "cpu_architectures" field.
+func (u *DeploymentProfileUpsert) SetCPUArchitectures(v []string) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldCPUArchitectures, v)
+	return u
+}
+
+// UpdateCPUArchitectures sets the "cpu_architectures" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateCPUArchitectures() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldCPUArchitectures)
+	return u
+}
+
+// ClearCPUArchitectures clears the value of the "cpu_architectures" field.
+func (u *DeploymentProfileUpsert) ClearCPUArchitectures() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldCPUArchitectures)
+	return u
+}
+
+// SetPeripherals sets the "peripherals" field.
+func (u *DeploymentProfileUpsert) SetPeripherals(v []map[string]interface{}) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldPeripherals, v)
+	return u
+}
+
+// UpdatePeripherals sets the "peripherals" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdatePeripherals() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldPeripherals)
+	return u
+}
+
+// ClearPeripherals clears the value of the "peripherals" field.
+func (u *DeploymentProfileUpsert) ClearPeripherals() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldPeripherals)
+	return u
+}
+
+// SetInterfaces sets the "interfaces" field.
+func (u *DeploymentProfileUpsert) SetInterfaces(v []map[string]interface{}) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldInterfaces, v)
+	return u
+}
+
+// UpdateInterfaces sets the "interfaces" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateInterfaces() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldInterfaces)
+	return u
+}
+
+// ClearInterfaces clears the value of the "interfaces" field.
+func (u *DeploymentProfileUpsert) ClearInterfaces() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldInterfaces)
+	return u
+}
+
+// SetAppID sets the "app_id" field.
+func (u *DeploymentProfileUpsert) SetAppID(v string) *DeploymentProfileUpsert {
+	u.Set(deploymentprofile.FieldAppID, v)
+	return u
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *DeploymentProfileUpsert) UpdateAppID() *DeploymentProfileUpsert {
+	u.SetExcluded(deploymentprofile.FieldAppID)
+	return u
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (u *DeploymentProfileUpsert) ClearAppID() *DeploymentProfileUpsert {
+	u.SetNull(deploymentprofile.FieldAppID)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.DeploymentProfile.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(deploymentprofile.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *DeploymentProfileUpsertOne) UpdateNewValues() *DeploymentProfileUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(deploymentprofile.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.DeploymentProfile.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *DeploymentProfileUpsertOne) Ignore() *DeploymentProfileUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DeploymentProfileUpsertOne) DoNothing() *DeploymentProfileUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DeploymentProfileCreate.OnConflict
+// documentation for more info.
+func (u *DeploymentProfileUpsertOne) Update(set func(*DeploymentProfileUpsert)) *DeploymentProfileUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DeploymentProfileUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetType sets the "type" field.
+func (u *DeploymentProfileUpsertOne) SetType(v string) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateType() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateType()
+	})
+}
+
+// ClearType clears the value of the "type" field.
+func (u *DeploymentProfileUpsertOne) ClearType() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearType()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *DeploymentProfileUpsertOne) SetDescription(v string) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateDescription() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *DeploymentProfileUpsertOne) ClearDescription() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetCPUCores sets the "cpu_cores" field.
+func (u *DeploymentProfileUpsertOne) SetCPUCores(v float64) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetCPUCores(v)
+	})
+}
+
+// AddCPUCores adds v to the "cpu_cores" field.
+func (u *DeploymentProfileUpsertOne) AddCPUCores(v float64) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.AddCPUCores(v)
+	})
+}
+
+// UpdateCPUCores sets the "cpu_cores" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateCPUCores() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateCPUCores()
+	})
+}
+
+// ClearCPUCores clears the value of the "cpu_cores" field.
+func (u *DeploymentProfileUpsertOne) ClearCPUCores() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearCPUCores()
+	})
+}
+
+// SetMemory sets the "memory" field.
+func (u *DeploymentProfileUpsertOne) SetMemory(v string) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetMemory(v)
+	})
+}
+
+// UpdateMemory sets the "memory" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateMemory() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateMemory()
+	})
+}
+
+// ClearMemory clears the value of the "memory" field.
+func (u *DeploymentProfileUpsertOne) ClearMemory() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearMemory()
+	})
+}
+
+// SetStorage sets the "storage" field.
+func (u *DeploymentProfileUpsertOne) SetStorage(v string) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetStorage(v)
+	})
+}
+
+// UpdateStorage sets the "storage" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateStorage() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateStorage()
+	})
+}
+
+// ClearStorage clears the value of the "storage" field.
+func (u *DeploymentProfileUpsertOne) ClearStorage() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearStorage()
+	})
+}
+
+// SetCPUArchitectures sets the "cpu_architectures" field.
+func (u *DeploymentProfileUpsertOne) SetCPUArchitectures(v []string) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetCPUArchitectures(v)
+	})
+}
+
+// UpdateCPUArchitectures sets the "cpu_architectures" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateCPUArchitectures() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateCPUArchitectures()
+	})
+}
+
+// ClearCPUArchitectures clears the value of the "cpu_architectures" field.
+func (u *DeploymentProfileUpsertOne) ClearCPUArchitectures() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearCPUArchitectures()
+	})
+}
+
+// SetPeripherals sets the "peripherals" field.
+func (u *DeploymentProfileUpsertOne) SetPeripherals(v []map[string]interface{}) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetPeripherals(v)
+	})
+}
+
+// UpdatePeripherals sets the "peripherals" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdatePeripherals() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdatePeripherals()
+	})
+}
+
+// ClearPeripherals clears the value of the "peripherals" field.
+func (u *DeploymentProfileUpsertOne) ClearPeripherals() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearPeripherals()
+	})
+}
+
+// SetInterfaces sets the "interfaces" field.
+func (u *DeploymentProfileUpsertOne) SetInterfaces(v []map[string]interface{}) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetInterfaces(v)
+	})
+}
+
+// UpdateInterfaces sets the "interfaces" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateInterfaces() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateInterfaces()
+	})
+}
+
+// ClearInterfaces clears the value of the "interfaces" field.
+func (u *DeploymentProfileUpsertOne) ClearInterfaces() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearInterfaces()
+	})
+}
+
+// SetAppID sets the "app_id" field.
+func (u *DeploymentProfileUpsertOne) SetAppID(v string) *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetAppID(v)
+	})
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertOne) UpdateAppID() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateAppID()
+	})
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (u *DeploymentProfileUpsertOne) ClearAppID() *DeploymentProfileUpsertOne {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearAppID()
+	})
+}
+
+// Exec executes the query.
+func (u *DeploymentProfileUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DeploymentProfileCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DeploymentProfileUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *DeploymentProfileUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: DeploymentProfileUpsertOne.ID is not supported by MySQL driver. Use DeploymentProfileUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *DeploymentProfileUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // DeploymentProfileCreateBulk is the builder for creating many DeploymentProfile entities in bulk.
 type DeploymentProfileCreateBulk struct {
 	config
 	err      error
 	builders []*DeploymentProfileCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the DeploymentProfile entities in the database.
@@ -332,6 +837,7 @@ func (_c *DeploymentProfileCreateBulk) Save(ctx context.Context) ([]*DeploymentP
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -378,6 +884,316 @@ func (_c *DeploymentProfileCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *DeploymentProfileCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.DeploymentProfile.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.DeploymentProfileUpsert) {
+//			SetType(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *DeploymentProfileCreateBulk) OnConflict(opts ...sql.ConflictOption) *DeploymentProfileUpsertBulk {
+	_c.conflict = opts
+	return &DeploymentProfileUpsertBulk{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.DeploymentProfile.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *DeploymentProfileCreateBulk) OnConflictColumns(columns ...string) *DeploymentProfileUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &DeploymentProfileUpsertBulk{
+		create: _c,
+	}
+}
+
+// DeploymentProfileUpsertBulk is the builder for "upsert"-ing
+// a bulk of DeploymentProfile nodes.
+type DeploymentProfileUpsertBulk struct {
+	create *DeploymentProfileCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.DeploymentProfile.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(deploymentprofile.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *DeploymentProfileUpsertBulk) UpdateNewValues() *DeploymentProfileUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(deploymentprofile.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.DeploymentProfile.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *DeploymentProfileUpsertBulk) Ignore() *DeploymentProfileUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DeploymentProfileUpsertBulk) DoNothing() *DeploymentProfileUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DeploymentProfileCreateBulk.OnConflict
+// documentation for more info.
+func (u *DeploymentProfileUpsertBulk) Update(set func(*DeploymentProfileUpsert)) *DeploymentProfileUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DeploymentProfileUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetType sets the "type" field.
+func (u *DeploymentProfileUpsertBulk) SetType(v string) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateType() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateType()
+	})
+}
+
+// ClearType clears the value of the "type" field.
+func (u *DeploymentProfileUpsertBulk) ClearType() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearType()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *DeploymentProfileUpsertBulk) SetDescription(v string) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateDescription() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *DeploymentProfileUpsertBulk) ClearDescription() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetCPUCores sets the "cpu_cores" field.
+func (u *DeploymentProfileUpsertBulk) SetCPUCores(v float64) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetCPUCores(v)
+	})
+}
+
+// AddCPUCores adds v to the "cpu_cores" field.
+func (u *DeploymentProfileUpsertBulk) AddCPUCores(v float64) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.AddCPUCores(v)
+	})
+}
+
+// UpdateCPUCores sets the "cpu_cores" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateCPUCores() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateCPUCores()
+	})
+}
+
+// ClearCPUCores clears the value of the "cpu_cores" field.
+func (u *DeploymentProfileUpsertBulk) ClearCPUCores() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearCPUCores()
+	})
+}
+
+// SetMemory sets the "memory" field.
+func (u *DeploymentProfileUpsertBulk) SetMemory(v string) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetMemory(v)
+	})
+}
+
+// UpdateMemory sets the "memory" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateMemory() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateMemory()
+	})
+}
+
+// ClearMemory clears the value of the "memory" field.
+func (u *DeploymentProfileUpsertBulk) ClearMemory() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearMemory()
+	})
+}
+
+// SetStorage sets the "storage" field.
+func (u *DeploymentProfileUpsertBulk) SetStorage(v string) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetStorage(v)
+	})
+}
+
+// UpdateStorage sets the "storage" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateStorage() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateStorage()
+	})
+}
+
+// ClearStorage clears the value of the "storage" field.
+func (u *DeploymentProfileUpsertBulk) ClearStorage() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearStorage()
+	})
+}
+
+// SetCPUArchitectures sets the "cpu_architectures" field.
+func (u *DeploymentProfileUpsertBulk) SetCPUArchitectures(v []string) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetCPUArchitectures(v)
+	})
+}
+
+// UpdateCPUArchitectures sets the "cpu_architectures" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateCPUArchitectures() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateCPUArchitectures()
+	})
+}
+
+// ClearCPUArchitectures clears the value of the "cpu_architectures" field.
+func (u *DeploymentProfileUpsertBulk) ClearCPUArchitectures() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearCPUArchitectures()
+	})
+}
+
+// SetPeripherals sets the "peripherals" field.
+func (u *DeploymentProfileUpsertBulk) SetPeripherals(v []map[string]interface{}) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetPeripherals(v)
+	})
+}
+
+// UpdatePeripherals sets the "peripherals" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdatePeripherals() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdatePeripherals()
+	})
+}
+
+// ClearPeripherals clears the value of the "peripherals" field.
+func (u *DeploymentProfileUpsertBulk) ClearPeripherals() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearPeripherals()
+	})
+}
+
+// SetInterfaces sets the "interfaces" field.
+func (u *DeploymentProfileUpsertBulk) SetInterfaces(v []map[string]interface{}) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetInterfaces(v)
+	})
+}
+
+// UpdateInterfaces sets the "interfaces" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateInterfaces() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateInterfaces()
+	})
+}
+
+// ClearInterfaces clears the value of the "interfaces" field.
+func (u *DeploymentProfileUpsertBulk) ClearInterfaces() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearInterfaces()
+	})
+}
+
+// SetAppID sets the "app_id" field.
+func (u *DeploymentProfileUpsertBulk) SetAppID(v string) *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.SetAppID(v)
+	})
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *DeploymentProfileUpsertBulk) UpdateAppID() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.UpdateAppID()
+	})
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (u *DeploymentProfileUpsertBulk) ClearAppID() *DeploymentProfileUpsertBulk {
+	return u.Update(func(s *DeploymentProfileUpsert) {
+		s.ClearAppID()
+	})
+}
+
+// Exec executes the query.
+func (u *DeploymentProfileUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the DeploymentProfileCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DeploymentProfileCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DeploymentProfileUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

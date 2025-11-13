@@ -16,8 +16,8 @@ import (
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // enables the 'postgres' driver
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"go.uber.org/zap"
 
@@ -86,8 +86,12 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	log.Printf("✅ Loaded config: site=%s, port=%d, CO URL=%s",
-		cfg.Server.Site, cfg.Server.Port, cfg.CO.URL)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("✅ Loaded config: site=%s, port=%d",
+		cfg.Server.Site, port)
 
     // Use NewProduction() for JSON, performance, and sampled logging
     logger, err := zap.NewProduction()
@@ -147,8 +151,8 @@ func main() {
 	defer client.Close()
 
 	router := api.NewRouter(client, cfg)
-	log.Println("CO API running on :", cfg.Server.Port)
-	if err := router.Run(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil {
+	log.Println("CO API running on :", port)
+	if err := router.Run(fmt.Sprintf(":%s", port)); err != nil {
 		log.Fatal(err)
 	}
 
@@ -165,102 +169,6 @@ func main() {
 			log.Fatalf("[CO] serve: %v", err)
 		}
 	}()
-
-	/*
-	   appDesc, err := application.ParseFromFile("../tests/app1.yaml")
-	   if err != nil {
-	       log.Fatal(err)
-	       //return
-	   }
-
-	   if err == nil {
-	       //fmt.Println("App:", appDesc.Metadata.Name)
-	       //fmt.Println("Catalog site:", appDesc.Metadata.Catalog.Application.Site)
-	       //fmt.Println("Deployment profiles:", len(appDesc.DeploymentProfiles))
-	       if err := Persist(ctx, client, appDesc); err != nil {
-	           log.Fatal(err)
-	       }
-	   }
-
-
-	   appDesc, err = application.ParseFromFile("../tests/app2.yaml")
-	   if err != nil {
-	       log.Fatal(err)
-	       //return
-	   }
-	   if err == nil {
-	       //fmt.Println("App:", appDesc.Metadata.Name)
-	       //fmt.Println("Catalog site:", appDesc.Metadata.Catalog.Application.Site)
-	       //fmt.Println("Deployment profiles:", len(appDesc.DeploymentProfiles))
-	       if err := Persist(ctx, client, appDesc); err != nil {
-	           log.Fatal(err)
-	       }
-	   }
-
-
-
-	   http.HandleFunc("/app/install", func(w http.ResponseWriter, r *http.Request) {
-	       if r.Method != http.MethodPost {
-	           http.Error(w, "POST required", http.StatusMethodNotAllowed)
-	           return
-	       }
-	   }
-
-	   http.HandleFunc("/app/all", func(w http.ResponseWriter, r *http.Request) {
-	       if r.Method != http.MethodGet {
-	           http.Error(w, "GET required", http.StatusMethodNotAllowed)
-	           return
-	       }
-	   }
-	   // REST endpoint to trigger deployment
-	   http.HandleFunc("/deploy", func(w http.ResponseWriter, r *http.Request) {
-	       if r.Method != http.MethodPost {
-	           http.Error(w, "POST required", http.StatusMethodNotAllowed)
-	           return
-	       }
-	       // Option 1: via query param ?file=fleet.yaml
-	       yamlPath := r.URL.Query().Get("file")
-
-	       // Option 2: upload directly as body
-	       if yamlPath == "" {
-	           tmpFile := "uploaded-fleet.yaml"
-	           data, err := io.ReadAll(r.Body)
-	           if err != nil {
-	               http.Error(w, "failed to read body", http.StatusBadRequest)
-	               return
-	           }
-	           if err := os.WriteFile(tmpFile, data, 0644); err != nil {
-	               http.Error(w, "failed to write file", http.StatusInternalServerError)
-	               return
-	           }
-	           yamlPath = tmpFile
-	       }
-
-	       log.Printf("[CO] REST deploy request: %s", yamlPath)
-	       if err := deployFleet(ctx, yamlPath, *loAddr); err != nil {
-	           log.Printf("[CO] deploy failed: %v", err)
-	           http.Error(w, err.Error(), http.StatusInternalServerError)
-	           return
-	       }
-
-	       w.WriteHeader(http.StatusOK)
-	       fmt.Fprintf(w, "Deployment triggered for %s\n", yamlPath)
-	   })
-
-	   go func() {
-	       log.Printf("[CO] HTTP listening on %s", *httpPort)
-	       if err := http.ListenAndServe(*httpPort, nil); err != nil {
-	           log.Fatalf("[CO] http: %v", err)
-	       }
-	   }()
-
-	   // Wait for Ctrl+C
-	   sig := make(chan os.Signal, 1)
-	   signal.Notify(sig, os.Interrupt)
-	   <-sig
-	   log.Println("[CO] shutting down")
-
-	*/
 }
 
-// deployment profile: DeploymentProfiles
+

@@ -12,7 +12,9 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-
+    networks:
+      - edge-net
+      
   nats:
     image: docker.io/library/nats:latest
     ports:
@@ -21,51 +23,73 @@ services:
     # command: -js # Enable JetStream if desired
     # volumes:
     #   - ./nats-data:/data # Optional: for persistent JetStream data
+    networks:
+      - edge-net
 
   co:
     build:
       dockerfile: ./dockerfile.co
     ports:
-      - 9101:9101
+      - 9001:9001
     depends_on:
       - postgres
     environment:
       DATABASE_URL: ${DATABASE_URL}
       GITHUB_TOKEN: ${GITHUB_TOKEN}
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      PORT: 9001
+      SITE_ID: site_id_1
+    # healthcheck:
+    #   test: ["CMD", "pg_isready", "-U", "postgres"]
+    #   interval: 5s
+    #   timeout: 3s
+    #   retries: 5
+    networks:
+      - edge-net
   lo:
     build:
       dockerfile: ./dockerfile.lo
     ports:
-      - 9102:9102
+      - 9010:9010
     depends_on:
       - postgres
       - nats
     environment:
-      # - DATABASE_URL:${DATABASE_URL}
-      BOLT_PATH: /data/nodes.db
+      DATABASE_URL: ${DATABASE_URL}
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      PORT: 9010
+      REPO: 
+      CO_URL: http://co:9001/api/v1
+      SITE_ID: site_id_1
     volumes:
       - ./data/lo:/data
       - ./local-cache:/tmp/repo-cache
+    networks:
+      - edge-net
 
   en:
     build:
       dockerfile: ./dockerfile.en
     ports:
-      - 9201:9201
+      - 9100:9100 
     depends_on:
       - nats
     environment:
-      - NATS_URL=nats://nats:4222
-      - GITHUB_TOKEN:${GITHUB_TOKEN}
-    volumes:
-      - ./local-cache:/local-cache
+      NATS_URL: nats://nats:4222
+      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      RUNTIME: containerd
+      NODE_ID: node_id_1
+      SITE_ID: site_id_1 
+      PORT: 9100 
+    # volumes:
+    #   - ./local-cache:/local-cache
+    networks:
+      - edge-net
+
+networks:
+  edge-net:
+    driver: bridge
+    # external: false
 
 volumes:
   pgdata:

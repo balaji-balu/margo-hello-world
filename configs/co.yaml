@@ -1,12 +1,8 @@
 server:
-  port: 9101
+  port: 8080
   name: "central orchestrator"
-  site: f95d34b2-8019-4590-a3ff-ff1e15ecc5d5 
-  # interval: 30s
-  # repo_owner: edge-orchestration-platform
-  # repo_name: deployments
-  # yaml_path: site-1/com-balaji-compose-a/desiredstate.yaml
-
+  site: site_id_1
+  # site: f95d34b2-8019-4590-a3ff-ff1e15ecc5d5 
 git:
   owner: edge-orchestration-platform
   repo: deployments
@@ -17,6 +13,6 @@ appregistry:
   repo: https://github.com/edge-orchestration-platform/app-registry
   branch: main
 mode: push
-nats:
-  url: nats://localhost:4222
+# nats:
+#   url: nats://localhost:4222
 

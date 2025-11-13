@@ -1,3 +1,9 @@
+20251112115204_modify_host.sql h1:pz62ZHJBymBjK2WyR01C1+BnyGouYQ697Raj7TEZGE8=
+20251112120739_modify_host.sql h1:fEpnjF+7O7e7WpcnaEUaxgYwD4eFBEXo96/Xo3fYHJU=
+20251112131622_modify_host.sql h1:QTsnyunz7DyA5k3pUXBTXiuEO3C4iB0Y1sMIMgtRZ94=
+20251112133251_modify_depcomp.sql h1:oFdaIHWwYAwo+4hT2TsV+5ez7N5AZYSsxB7fMrH3VJw=
+
+
 v3
 Table application_desc {
   app_id text [primary key]

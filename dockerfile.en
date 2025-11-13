@@ -6,12 +6,18 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o edge ./cmd/en
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o en ./cmd/en
 
 FROM debian:bookworm-slim
 WORKDIR /app
-COPY --from=builder /app/edge .
-COPY ./configs/edge1.yaml ./configs/edge1.yaml
+COPY --from=builder /app/en .
+
+CMD ["./en"]
+
+# COPY ./configs/edge1.yaml ./configs/edge1.yaml
 # ENTRYPOINT ["/app/edge"]
-CMD ["./edge", "--config=./configs/edge1.yaml"]
+# CMD ["./edge", "--config=./configs/edge1.yaml"]
+# COPY ./entrypoint.en.sh /app/entrypoint.en.sh
+# RUN chmod +x /app/entrypoint.en.sh
+# ENTRYPOINT ["/app/entrypoint.en.sh"]
 

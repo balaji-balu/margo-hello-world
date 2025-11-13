@@ -2,8 +2,75 @@
 
 package ent
 
+import (
+	"time"
+
+	"github.com/balaji-balu/margo-hello-world/ent/deploymentcomponentstatus"
+	"github.com/balaji-balu/margo-hello-world/ent/deploymentstatus"
+	"github.com/balaji-balu/margo-hello-world/ent/host"
+	"github.com/balaji-balu/margo-hello-world/ent/schema"
+	"github.com/balaji-balu/margo-hello-world/ent/site"
+	"github.com/google/uuid"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	deploymentcomponentstatusFields := schema.DeploymentComponentStatus{}.Fields()
+	_ = deploymentcomponentstatusFields
+	// deploymentcomponentstatusDescName is the schema descriptor for name field.
+	deploymentcomponentstatusDescName := deploymentcomponentstatusFields[1].Descriptor()
+	// deploymentcomponentstatus.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	deploymentcomponentstatus.NameValidator = deploymentcomponentstatusDescName.Validators[0].(func(string) error)
+	// deploymentcomponentstatusDescState is the schema descriptor for state field.
+	deploymentcomponentstatusDescState := deploymentcomponentstatusFields[2].Descriptor()
+	// deploymentcomponentstatus.DefaultState holds the default value on creation for the state field.
+	deploymentcomponentstatus.DefaultState = deploymentcomponentstatusDescState.Default.(string)
+	// deploymentcomponentstatusDescCreatedAt is the schema descriptor for created_at field.
+	deploymentcomponentstatusDescCreatedAt := deploymentcomponentstatusFields[5].Descriptor()
+	// deploymentcomponentstatus.DefaultCreatedAt holds the default value on creation for the created_at field.
+	deploymentcomponentstatus.DefaultCreatedAt = deploymentcomponentstatusDescCreatedAt.Default.(func() time.Time)
+	// deploymentcomponentstatusDescUpdatedAt is the schema descriptor for updated_at field.
+	deploymentcomponentstatusDescUpdatedAt := deploymentcomponentstatusFields[6].Descriptor()
+	// deploymentcomponentstatus.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	deploymentcomponentstatus.DefaultUpdatedAt = deploymentcomponentstatusDescUpdatedAt.Default.(func() time.Time)
+	// deploymentcomponentstatus.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	deploymentcomponentstatus.UpdateDefaultUpdatedAt = deploymentcomponentstatusDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// deploymentcomponentstatusDescID is the schema descriptor for id field.
+	deploymentcomponentstatusDescID := deploymentcomponentstatusFields[0].Descriptor()
+	// deploymentcomponentstatus.DefaultID holds the default value on creation for the id field.
+	deploymentcomponentstatus.DefaultID = deploymentcomponentstatusDescID.Default.(func() uuid.UUID)
+	deploymentstatusFields := schema.DeploymentStatus{}.Fields()
+	_ = deploymentstatusFields
+	// deploymentstatusDescState is the schema descriptor for state field.
+	deploymentstatusDescState := deploymentstatusFields[1].Descriptor()
+	// deploymentstatus.DefaultState holds the default value on creation for the state field.
+	deploymentstatus.DefaultState = deploymentstatusDescState.Default.(string)
+	// deploymentstatusDescCreatedAt is the schema descriptor for created_at field.
+	deploymentstatusDescCreatedAt := deploymentstatusFields[4].Descriptor()
+	// deploymentstatus.DefaultCreatedAt holds the default value on creation for the created_at field.
+	deploymentstatus.DefaultCreatedAt = deploymentstatusDescCreatedAt.Default.(func() time.Time)
+	// deploymentstatusDescUpdatedAt is the schema descriptor for updated_at field.
+	deploymentstatusDescUpdatedAt := deploymentstatusFields[5].Descriptor()
+	// deploymentstatus.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	deploymentstatus.DefaultUpdatedAt = deploymentstatusDescUpdatedAt.Default.(func() time.Time)
+	// deploymentstatus.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	deploymentstatus.UpdateDefaultUpdatedAt = deploymentstatusDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// deploymentstatusDescID is the schema descriptor for id field.
+	deploymentstatusDescID := deploymentstatusFields[0].Descriptor()
+	// deploymentstatus.DefaultID holds the default value on creation for the id field.
+	deploymentstatus.DefaultID = deploymentstatusDescID.Default.(func() uuid.UUID)
+	hostFields := schema.Host{}.Fields()
+	_ = hostFields
+	// hostDescID is the schema descriptor for id field.
+	hostDescID := hostFields[0].Descriptor()
+	// host.DefaultID holds the default value on creation for the id field.
+	host.DefaultID = hostDescID.Default.(func() uuid.UUID)
+	siteFields := schema.Site{}.Fields()
+	_ = siteFields
+	// siteDescID is the schema descriptor for id field.
+	siteDescID := siteFields[0].Descriptor()
+	// site.DefaultID holds the default value on creation for the id field.
+	site.DefaultID = siteDescID.Default.(func() uuid.UUID)
 }

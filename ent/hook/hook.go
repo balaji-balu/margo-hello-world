@@ -33,6 +33,18 @@ func (f ComponentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ComponentMutation", m)
 }
 
+// The DeploymentComponentStatusFunc type is an adapter to allow the use of ordinary
+// function as DeploymentComponentStatus mutator.
+type DeploymentComponentStatusFunc func(context.Context, *ent.DeploymentComponentStatusMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DeploymentComponentStatusFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DeploymentComponentStatusMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DeploymentComponentStatusMutation", m)
+}
+
 // The DeploymentProfileFunc type is an adapter to allow the use of ordinary
 // function as DeploymentProfile mutator.
 type DeploymentProfileFunc func(context.Context, *ent.DeploymentProfileMutation) (ent.Value, error)
@@ -43,6 +55,18 @@ func (f DeploymentProfileFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DeploymentProfileMutation", m)
+}
+
+// The DeploymentStatusFunc type is an adapter to allow the use of ordinary
+// function as DeploymentStatus mutator.
+type DeploymentStatusFunc func(context.Context, *ent.DeploymentStatusMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DeploymentStatusFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DeploymentStatusMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DeploymentStatusMutation", m)
 }
 
 // The HostFunc type is an adapter to allow the use of ordinary
