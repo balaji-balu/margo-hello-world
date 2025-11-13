@@ -80,9 +80,10 @@ Users interact via Web Portal or CLI through CO API.
 - *sites, hosts, orchestrator, tenants*
 
 ### Roadmap
-- wasm
-- k3s/k8s
-- Talos linux
+- runtime: wasm, k3s/k8, Talos linux based k8s
+- rich intelligent profile selection at CO
+- CLI, web portal: OAuth2 for portal/API
+- web portal
 ### Folders structure
 cmd
 - cmd
