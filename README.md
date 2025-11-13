@@ -82,53 +82,11 @@ Users interact via Web Portal or CLI through CO API.
 ### Roadmap
 - runtime: wasm, k3s/k8, Talos linux based k8s
 - rich intelligent profile selection at CO
-- margo based security between CO and LO 
-- CLI, web portal: OAuth2 for portal/API
+- margo based security between CO and LO
+- otel  based observability
+- CLI, web portal: OAuth2 for portal/API using keycloak
 - web portal
-### Folders structure
-cmd
-- cmd
-	- co
-	- lo
-	- en
-- ent                                <-- persistable data models
-	- schema                    <-- this is where you create data model
-	- migrate/migrations <-- atlas based migrations
-- internal
-	- orchestrator
-	- gitobserver
-	- gitfetcher
-	- ocifetch
-	- api
-	- edgenodes 
-- pkg
-	- model
-- atlas.hcl                          <--- db migration configuration
-- docker-compose.yaml   <--- spins nats, postgres, co, lo, en containers
-- dockerfile.co                  <--- co container
-- dockerfile.lo                   <--- lo container
-- dockerfile.en                  <--- en container 
-- go.mod                           
 
-
-edgectl
-
-web portal
-
-### Tech stack
-co, lo, en:
-- messaging: NATS
-- db: ent, atlas, postgres, boltz db
-- go-git (neutralized git access)
-- golang
-- 
-- logger: zap 
-
-web portal: 
-- next.js, shadcn, tailwind.css 
-
-cli: 
-- cobra
 ## Getting started
 
 1. start the docker compose and verify the containers are properly created: 
@@ -164,6 +122,46 @@ Listing apps ...
 ```
 go run main.go co deploy --app "Digitron orchestrator" --site 3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad --deploytype compose 
 ```
+
+### Folders structure
+cmd
+- cmd
+	- co
+	- lo
+	- en
+- ent                                <-- persistable data models
+	- schema                    <-- this is where you create data model
+	- migrate/migrations <-- atlas based migrations
+- internal
+	- orchestrator
+	- gitobserver
+	- gitfetcher
+	- ocifetch
+	- api
+	- edgenodes 
+- pkg
+	- model
+- atlas.hcl                          <--- db migration configuration
+- docker-compose.yaml   <--- spins nats, postgres, co, lo, en containers
+- dockerfile.co                  <--- co container
+- dockerfile.lo                   <--- lo container
+- dockerfile.en                  <--- en container 
+- go.mod                           
+
+### Tech stack
+co, lo, en:
+- messaging: NATS
+- db: ent, atlas, postgres, boltz db
+- go-git (neutralized git access)
+- golang
+- 
+- logger: zap 
+
+web portal: 
+- next.js, shadcn, tailwind.css 
+
+cli: 
+- cobra
 ## Code 
 ```
 go run ./cmd/co --config=./configs/co.yml
@@ -192,5 +190,4 @@ ent generate ./ent/schema  --feature sql/upsert
 atlas migrate diff add_deloymentstatus --env local --to "ent://ent/schema"
 atlas migrate apply --env local
 ```
-
 uses atlas.hcl at the root directory
