@@ -82,6 +82,7 @@ Users interact via Web Portal or CLI through CO API.
 ### Roadmap
 - runtime: wasm, k3s/k8, Talos linux based k8s
 - rich intelligent profile selection at CO
+- margo based security between CO and LO 
 - CLI, web portal: OAuth2 for portal/API
 - web portal
 ### Folders structure
