@@ -78,6 +78,11 @@ Users interact via Web Portal or CLI through CO API.
 - *[deployment status](https://specification.margo.org/specification/margo-management-interface/deployment-status/):* used for communicating the workload deployment status
 - *[device capabilities](https://specification.margo.org/specification/margo-management-interface/device-capabilities/)*: edge node capabilities like cpu, memory, gpu etc
 - *sites, hosts, orchestrator, tenants*
+
+### Roadmap
+- wasm
+- k3s/k8s
+- Talos linux
 ### Folders structure
 cmd
 - cmd
