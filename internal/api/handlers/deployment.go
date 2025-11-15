@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
-	//"time"
+	//"os"
+	"time"
 	"github.com/google/go-github/v55/github"
 	"golang.org/x/oauth2"
 	"net/http"
 	//"strings"
 
 	//"github.com/joho/godotenv"
-	"path/filepath"
+	//"path/filepath"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,9 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/internal/config"
+	"github.com/balaji-balu/margo-hello-world/internal/co"
 	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
+	"github.com/balaji-balu/margo-hello-world/internal/metrics"
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
 	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
@@ -194,8 +196,13 @@ func PushDeploymentYAML(ctx context.Context,
 	return nil
 }
 
-func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
+func CreateDeployment(c *gin.Context,co *co.CO,  client *ent.Client, cfg *config.Config) {
 	//log.Println("CreateDeployment called. Site:", cfg.Server.Site)
+ 
+	//c.StartDeplotment
+
+	start := time.Now()
+
 	log.Println("Repo URL:", cfg.Git.Repo)
 
 	var app App
@@ -276,23 +283,35 @@ func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
 		appdply := buildApplicationDeployment(appDesc, profile, components, site.SiteID)
 		deploymentID := appdply.Metadata.Annotations.ID
 		log.Println("deploymentID:", deploymentID)
-		token := os.Getenv("GITHUB_TOKEN")
 
-		owner := cfg.Git.Owner //"edge-orchestration-platform"
-		repo := cfg.Git.Repo   //"deployments"
-		path := filepath.Join(site.SiteID, deploymentID, "desiredstate.yaml")
-		message := "Add new deployment"
-
-		log.Println("token:", token)
-		log.Println("owner:", owner)
-		log.Println("repo:", repo)
-		log.Println("path:", path)
-		//log.Println("message:", message)
-
-		if err := PushDeploymentYAML(ctx, token, owner, 
-						repo, path, message, appdply); err != nil {
-			log.Fatal(err)
+		// 1. Marshal to YAML
+		yamlBytes, err := yaml.Marshal(appdply)
+		if err != nil {
+			fmt.Errorf("failed to marshal YAML: %w", err)
+			continue
+			//return fmt.Errorf("failed to marshal YAML: %w", err)
 		}
+		err = co.CreateDeployment(site.SiteID, deploymentID, yamlBytes)
+		if err != nil {
+			fmt.Errorf("Failed to create deployments repo with err:", err)
+		}
+		// token := os.Getenv("GITHUB_TOKEN")
+
+		// owner := cfg.Git.Owner //"edge-orchestration-platform"
+		// repo := cfg.Git.Repo   //"deployments"
+		// path := filepath.Join(site.SiteID, deploymentID, "desiredstate.yaml")
+		// message := "Add new deployment"
+
+		// log.Println("token:", token)
+		// log.Println("owner:", owner)
+		// log.Println("repo:", repo)
+		// log.Println("path:", path)
+		// //log.Println("message:", message)
+
+		// if err := PushDeploymentYAML(ctx, token, owner, 
+		// 				repo, path, message, appdply); err != nil {
+		// 	log.Fatal(err)
+		// }
 
 		//TBD: create a deployment record in postgres using ent
 		//      can be mapped to pkg/model DeploymentStatus
@@ -315,13 +334,21 @@ func CreateDeployment(c *gin.Context, client *ent.Client, cfg *config.Config) {
 		SaveDeploymentStatus(ctx, client, status)
 
 		deployments = append(deployments, deploymentID)
+		log.Println("before calling metrics:", site.SiteID)
+		metrics.DeploymentsTotal.WithLabelValues(deploymentID).Inc()
+    	metrics.DeploymentsActive.WithLabelValues(deploymentID).Inc()
 		log.Printf("✅ Successfully pushed deployment YAML for profile %s", profile.ID)
 	}
 
+	log.Printf("deployments done:", deployments)
+
 	c.JSON(http.StatusOK, gin.H{
-			"deployment_ids": deployments,
-			"status":        "started",
+		"deployment_ids": deployments,
+		"status":        "started",
 	})	
+
+	duration := time.Since(start).Seconds()
+	metrics.RequestDuration.WithLabelValues("/deploy").Observe(duration)
 	return
 }
 

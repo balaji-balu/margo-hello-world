@@ -15,8 +15,10 @@ import (
 	"gopkg.in/yaml.v3"	
 
 	"github.com/balaji-balu/margo-hello-world/ent"
-	"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
+	//"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+	"github.com/balaji-balu/margo-hello-world/internal/gitmanager"
+	"github.com/balaji-balu/margo-hello-world/internal/watcher"
 	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
 )
@@ -37,7 +39,8 @@ type Event struct {
 
 type GitPolledPayload struct {
 	Commit      string
-	Deployments []gitobserver.DeploymentChange
+	//Deployments []gitobserver.DeploymentChange
+	Deployments []watcher.DeploymentChange
 }
 
 type NetworkChangePayload struct {
@@ -76,7 +79,8 @@ type LocalOrchestrator struct {
 	RootCtx context.Context
 	//db      *bolt.DB
 	nc      *natsbroker.Broker
-
+	Mgr     *gitmanager.Manager
+	Watcher *watcher.Watcher
 	db *ent.Client
 	eventCh     chan Event
 	logger      *zap.Logger
@@ -101,6 +105,7 @@ func New(
 	siteID, natsURL, repo string,
 	db *ent.Client,
 	nc *natsbroker.Broker,
+	gitmgr *gitmanager.Manager,
 	logger *zap.Logger,
 ) *LocalOrchestrator {
 	rb := NewResultBus()
@@ -120,6 +125,7 @@ func New(
 		RootCtx: ctx,
 		db:      db,
 		nc:      nc,
+		Mgr: 	gitmgr,
 	}
 }
 
@@ -258,7 +264,7 @@ func (l *LocalOrchestrator) handleGitPolled(data GitPolledPayload) {
 	for _, d := range data.Deployments {
 		l.logger.Info("Deploying", zap.String("deployment_id", d.DeploymentID))
 		var dep deployment.ApplicationDeployment
-		if err := yaml.Unmarshal([]byte(d.YAMLContent), &dep); err != nil {
+		if err := yaml.Unmarshal([]byte(d.Content), &dep); err != nil {
 			l.logger.Error("Failed to unmarshal deployment YAML", zap.Error(err))
 			continue
 		}

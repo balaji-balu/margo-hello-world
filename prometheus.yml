@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'co'
+    static_configs:
+      - targets: ['co:9200']
+  - job_name: 'lo'
+    static_configs:
+      - targets: ['lo:9200']
+  - job_name: 'en'
+    static_configs:
+      - targets: ['en:9200']

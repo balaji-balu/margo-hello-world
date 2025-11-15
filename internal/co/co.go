@@ -1,22 +1,45 @@
-package orchestrator
+package co
 
 import (
-	"context"
-
-	"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
-	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+	//"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	//"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
+	//"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+	"github.com/balaji-balu/margo-hello-world/internal/gitmanager"
 )
 
-func Run(ctx context.Context, cfg *Config) error {
-	natsClient, err := natsbroker.New(cfg.NATS.URL)
-	if err != nil {
+// CO uses gitmanager to read app-registry and write deployments
+type CO struct {
+	Mgr *gitmanager.Manager
+	AppRepo string
+	DepRepo string
+}
+
+func NewCO(m *gitmanager.Manager, appRepo, depRepo string) *CO {
+	return &CO{Mgr: m, AppRepo: appRepo, DepRepo: depRepo}
+}
+
+// CreateDeployment writes a desiredstate.yaml under deployments/<site>/<deploymentID>/desiredstate.yaml
+func (c *CO) CreateDeployment(siteID, deploymentID string, yaml []byte) error {
+	rel := filepath.Join(siteID, deploymentID, "desiredstate.yaml")
+	// write file into working path
+	cfg, _ := c.Mgr.GetConfig(c.DepRepo)
+	full := filepath.Join(cfg.WorkingPath, rel)
+	if err := os.MkdirAll(filepath.Dir(full), 0755); err != nil {
 		return err
 	}
-
-	observer := gitobserver.New(cfg.Git.Repo, cfg.Git.Branch, cfg.SiteFilter)
-	observer.OnChange(func(event gitobserver.GitEvent) {
-		_ = natsClient.Publish("git.desiredstate.changed", event)
-	})
-
-	return observer.Start(ctx)
+	if err := os.WriteFile(full, yaml, 0644); err != nil {
+		return err
+	}
+	// commit and push
+	msg := fmt.Sprintf("CO: create deployment %s for site %s", deploymentID, siteID)
+	return c.Mgr.CommitAndPush(c.DepRepo, rel, msg)
 }
+
+// ReadApp reads a file from app-registry
+func (c *CO) ReadApp(path string) ([]byte, error) {
+	return c.Mgr.ReadFile(c.AppRepo, path)
+}
+

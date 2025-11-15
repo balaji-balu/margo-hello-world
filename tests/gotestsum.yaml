@@ -1,3 +1,0 @@
-format: short
-junitfile: results.xml
-raw-command: go test ./tests/integration/...

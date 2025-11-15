@@ -10,6 +10,7 @@ import (
 	. "github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+	"github.com/balaji-balu/margo-hello-world/internal/watcher"
 )
 
 // Handles PushPreferred mode
@@ -58,8 +59,11 @@ func (lo *LocalOrchestrator) StartPushMode(ctx context.Context, cfg LoConfig) er
 func (l *LocalOrchestrator) StartPullMode(ctx context.Context, cfg LoConfig) {
 	l.logger.Info("📡 Starting Pull Mode (periodic git sync)")
 
-	watcher := gitobserver.New(cfg.Repo, "main", 30*time.Second)
-	watcher.OnChange = func(commit string, deployments []gitobserver.DeploymentChange) {
+	w := watcher.NewWatcher(l.Mgr, cfg.Repo, cfg.Site, 3*time.Second)
+	//w.OnChange = lo.onDeployments
+
+	//watcher := gitobserver.New(cfg.Repo, "main", 30*time.Second)
+	w.OnChange = func(commit string, deployments []watcher.DeploymentChange) {
 		payload := GitPolledPayload{
 			Commit:      commit,
 			Deployments: deployments,
@@ -68,14 +72,14 @@ func (l *LocalOrchestrator) StartPullMode(ctx context.Context, cfg LoConfig) {
 	}
 
 	go func() {
-		if err := watcher.Start(cfg.Site); err != nil {
+		if err := w.Start(); err != nil {
 			l.logger.Error("Watcher error", zap.Error(err))
 		}
 	}()
 
 	<-ctx.Done()
 	l.logger.Info("🛑 Stopping Git watcher...")
-	watcher.Stop()
+	w.Stop()
 }
 
 func (lo *LocalOrchestrator) StartOfflineMode(ctx context.Context, cfg LoConfig) error {

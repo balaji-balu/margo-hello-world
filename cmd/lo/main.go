@@ -26,6 +26,8 @@ import (
 	"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
 	"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
+	"github.com/balaji-balu/margo-hello-world/internal/gitmanager"
+	"github.com/balaji-balu/margo-hello-world/internal/metrics"
 )
 
 var (
@@ -59,6 +61,10 @@ func main() {
     if port == "" {
         port = "8081"
     }
+	metrics_port := os.Getenv("METRICS_PORT")
+	if metrics_port == "" {
+		metrics_port = "9201"
+	}	
 	repo := os.Getenv("REPO")
 	if repo == "" {
 		repo = "https://github.com/edge-orchestration-platform/deployments.git"
@@ -124,14 +130,28 @@ func main() {
 	}
 	log.Println("connected to", natsURL)
 
+	gitmgr := gitmanager.NewManager()
+	gitmgr.Register(gitmanager.RepoConfig{
+		Name: "deployments",
+		Mode: gitmanager.GitLocal, //GitRemote,
+		//RemoteURL: "https://github.com/edge-orchestration-platform/deployments.git",
+		LocalPath: "/home/balaji/local-deployments",
+		Branch: "main",
+		Token: os.Getenv("GITHUB_TOKEN"),
+		WorkingPath: "/tmp/deployments-lo",
+	})
 
 	// ------------------------------------------------------------
 	// 2️⃣ Setup orchestrator + FSM loader
 	// ------------------------------------------------------------
-	lo := orchestrator.New(ctx, siteID, natsURL, repo, client, nc, logger)
+	lo := orchestrator.New(ctx, siteID, natsURL, "deployments", client, nc, gitmgr, logger)
 	loader := fsmloader.NewLoader(ctx, logger, lo)
 	lo.FSM = loader.FSM // ensure both share same FSM instance
+	//w.OnChange = lo.OnDeployments
 	lo.MonitorHealthandStatusFromEN(coURL)
+
+	metrics.Init("lo")
+	metrics.StartServer(metrics_port)	
 
 	log.Println("🚀 Starting adaptive mode manager...")
 

@@ -3,16 +3,18 @@ package api
 import (
 	"log"
 	"os"
+	"github.com/gin-gonic/gin"
+
 	"github.com/balaji-balu/margo-hello-world/ent"
 	"github.com/balaji-balu/margo-hello-world/internal/api/handlers"
 	"github.com/balaji-balu/margo-hello-world/internal/api/middleware"
 	"github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
 	"github.com/balaji-balu/margo-hello-world/internal/gitfetcher"
-	"github.com/gin-gonic/gin"
+	"github.com/balaji-balu/margo-hello-world/internal/co"
 )
 
-func NewRouter(client *ent.Client, cfg *config.Config) *gin.Engine {
+func NewRouter(client *ent.Client, co *co.CO, cfg *config.Config) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
@@ -41,7 +43,7 @@ func NewRouter(client *ent.Client, cfg *config.Config) *gin.Engine {
 			handlers.CreateApp(c, client, &fetcher) })
 		api.GET("/apps/:id", func(c *gin.Context) { handlers.GetApp(c, client) })
 		api.POST("/deployments", func(c *gin.Context) { 
-			handlers.CreateDeployment(c, client, cfg) })
+			handlers.CreateDeployment(c,co, client, cfg) })
 		// api.GET("/deployments", (func(c *gin.Context) {
 		// 	handlers.GetDeloymentsStatus(c, client)
 		// })

@@ -13,6 +13,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentstatus"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentcomponentstatus"
 	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
+	"github.com/balaji-balu/margo-hello-world/internal/metrics"
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
 	
 )
@@ -37,6 +38,10 @@ func DeploymentStatusHandler(c *gin.Context, client *ent.Client, sm *streammanag
 	log.Println("Deployment id:", ds.DeploymentID, sm)
 	
 	UpdateDeploymentStatus(ctx, client, &ds)
+
+	if ds.Status.State == "failed" || ds.Status.State == "installed" {
+		metrics.DeploymentsActive.WithLabelValues(ds.DeploymentID).Dec()
+	} 
 
 	// brodcast the status to streaming(SSR) clients
 	sm.Broadcast(ds.DeploymentID, streammanager.DeployEvent{

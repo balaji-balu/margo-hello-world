@@ -13,6 +13,7 @@ import (
 	"github.com/joho/godotenv"
 
 	//"github.com/balaji-balu/margo-hello-world/internal/config"
+	"github.com/balaji-balu/margo-hello-world/internal/metrics"
 	"github.com/balaji-balu/margo-hello-world/internal/edgenode"
 	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
@@ -41,6 +42,10 @@ func main() {
     if port == "" {
         port = "8082"
     }
+	metrics_port := os.Getenv("METRICS_PORT")
+	if metrics_port == "" {
+		metrics_port = "9210"
+	}	
     siteID := os.Getenv("SITE_ID")
 	if siteID == "" {
 		siteID = "f95d34b2-8019-4590-a3ff-ff1e15ecc5d5"
@@ -81,6 +86,9 @@ func main() {
 	// Initialize Edge Node + FSM
 	en := edgenode.NewEdgeNode(ctx, siteID, nodeID, runtime, nc, logger)
 	//nodeFSM := fsmloader.NewEdgeNodeFSM(ctx, "edge-node-1", en, logger)
+
+metrics.Init("en")
+metrics.StartServer(metrics_port)	
 
 	// Start background tasks
 	en.Start()

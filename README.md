@@ -135,6 +135,7 @@ cmd
 - internal
 	- orchestrator
 	- gitobserver
+	- gitwriter
 	- gitfetcher
 	- ocifetch
 	- api
@@ -154,7 +155,7 @@ co, lo, en:
 - db: ent, atlas, postgres, boltz db
 - go-git (neutralized git access)
 - golang
-- 
+- metrics: prometheus
 - logger: zap 
 
 web portal: 

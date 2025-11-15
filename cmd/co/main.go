@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	//"context"
 	"flag"
 	"fmt"
 	"log"
@@ -9,44 +9,50 @@ import (
 	"os"
 	"time"
 
-	"github.com/balaji-balu/margo-hello-world/ent"
-	"github.com/balaji-balu/margo-hello-world/internal/api"
-	"github.com/balaji-balu/margo-hello-world/internal/config"
-	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
-
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	_ "github.com/lib/pq" // enables the 'postgres' driver
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"go.uber.org/zap"
+	
 
 	// telemetry
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv/v1.12.0"
+	// "go.opentelemetry.io/otel"
+	// "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	// "go.opentelemetry.io/otel/sdk/resource"
+	// "go.opentelemetry.io/otel/sdk/trace"
+	// "go.opentelemetry.io/otel/semconv/v1.12.0"
+
+	"github.com/balaji-balu/margo-hello-world/ent"
+	"github.com/balaji-balu/margo-hello-world/internal/api"
+	"github.com/balaji-balu/margo-hello-world/internal/config"
+	"github.com/balaji-balu/margo-hello-world/internal/gitmanager"
+	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
+	"github.com/balaji-balu/margo-hello-world/internal/metrics"
+	"github.com/balaji-balu/margo-hello-world/internal/co"
+
+
 )
 
-func InitTelemetry(ctx context.Context, serviceName string) func(context.Context) error {
-	exporter, err := otlptracegrpc.New(ctx,
-		otlptracegrpc.WithInsecure(),
-		otlptracegrpc.WithEndpoint("localhost:4317"),
-	)
-	if err != nil {
-		log.Fatalf("Failed to create trace exporter: %v", err)
-	}
-	tp := trace.NewTracerProvider(
-		trace.WithBatcher(exporter, trace.WithBatchTimeout(time.Second)),
-		trace.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(serviceName),
-		)),
-	)
-	otel.SetTracerProvider(tp)
-	return tp.Shutdown
-}
+// func InitTelemetry(ctx context.Context, serviceName string) func(context.Context) error {
+// 	exporter, err := otlptracegrpc.New(ctx,
+// 		otlptracegrpc.WithInsecure(),
+// 		otlptracegrpc.WithEndpoint("localhost:4317"),
+// 	)
+// 	if err != nil {
+// 		log.Fatalf("Failed to create trace exporter: %v", err)
+// 	}
+// 	tp := trace.NewTracerProvider(
+// 		trace.WithBatcher(exporter, trace.WithBatchTimeout(time.Second)),
+// 		trace.WithResource(resource.NewWithAttributes(
+// 			semconv.SchemaURL,
+// 			semconv.ServiceNameKey.String(serviceName),
+// 		)),
+// 	)
+// 	otel.SetTracerProvider(tp)
+// 	return tp.Shutdown
+// }
 
 func init() {
 	err := godotenv.Load("./.env") // relative path to project root
@@ -56,9 +62,9 @@ func init() {
 }
 
 func main() {
-	ctx := context.Background()
-	shutdown := InitTelemetry(ctx, "orchestrator")
-	defer shutdown(ctx)
+	//ctx := context.Background()
+	// shutdown := InitTelemetry(ctx, "orchestrator")
+	// defer shutdown(ctx)
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err) // Handle any potential error
@@ -90,8 +96,12 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("✅ Loaded config: site=%s, port=%d",
-		cfg.Server.Site, port)
+	metrics_port := os.Getenv("METRICS_PORT")
+	if metrics_port == "" {
+		metrics_port = "9200"
+	}
+	log.Printf("✅ Loaded config: site=%s, port=%s metrics-port=%s",
+		cfg.Server.Site, port, metrics_port)
 
     // Use NewProduction() for JSON, performance, and sampled logging
     logger, err := zap.NewProduction()
@@ -112,11 +122,6 @@ func main() {
 	flag.Parse()
 
 	//log.Println("config:", *config, "node:", node)
-
-	//dsn := os.Getenv("DATABASE_URL")
-	// if dsn == "" {
-	//     dsn = "postgres://postgres:postgres@localhost:5432/orchestration?sslmode=disable"
-	// }
 
 	// machine, err := fsmloader.LoadFSM("./configs/fsm.yaml", "CO")
 	// if err != nil {
@@ -150,7 +155,34 @@ func main() {
 	client := ent.NewClient(ent.Driver(drv))
 	defer client.Close()
 
-	router := api.NewRouter(client, cfg)
+	metrics.Init("co")
+	metrics.StartServer(metrics_port)
+
+	gitm := gitmanager.NewManager()
+
+	gitm.Register(gitmanager.RepoConfig{
+		Name: "app-registry",
+		Mode: gitmanager.GitRemote, // or GitLocal
+		RemoteURL: "https://github.com/edge-orchestration-platform/app-registry.git",
+		Branch: "main",
+		WorkingPath: "/tmp/app-registry",
+	})
+
+	gitm.Register(gitmanager.RepoConfig{
+		Name: "deployments",
+		Mode: gitmanager.GitLocal, //GitRemote,
+		//RemoteURL: "https://github.com/edge-orchestration-platform/deployments.git",
+		LocalPath: "/home/balaji/local-deployments",
+		Branch: "main",
+		Token: os.Getenv("GITHUB_TOKEN"),
+		WorkingPath: "/tmp/deployments-co",
+	})
+	if err := gitm.InitRepo("deployments"); err != nil {
+    	log.Fatal(err)
+	}
+	c := co.NewCO(gitm, "app-registry", "deployments")
+
+	router := api.NewRouter(client, c, cfg)
 	log.Println("CO API running on :", port)
 	if err := router.Run(fmt.Sprintf(":%s", port)); err != nil {
 		log.Fatal(err)
